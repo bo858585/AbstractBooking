@@ -1,4 +1,4 @@
-# AbstractOrderExecutionSystem
+# AbstractBooking
 
 ***Техническое задание (предварительное) на систему выполнения абстрактных заказов***
 
@@ -80,10 +80,18 @@ django-admin - админка с отображением ленты заказ�
 
 ###Для разработки установить:
 
-virtualenvwrapper https://virtualenvwrapper.readthedocs.org/en/latest/ .
-python
-django
-postgresql http://initd.org/psycopg
+1. virtualenvwrapper
+https://virtualenvwrapper.readthedocs.org/en/latest/
 
-После разработки установить проект на pythonanywhere.com:
-http://habrahabr.ru/post/181556/
+2. python
+
+3. postgresql
+http://paintincode.blogspot.ru/2012/08/install-postgresql-for-django-and.html
+(проверить pg_conf с django
+  https://stackoverflow.com/questions/7695962/postgresql-password-authentication-failed-for-user-postgres
+  )
+
+  4. django
+
+  После разработки установить проект на pythonanywhere.com:
+  http://habrahabr.ru/post/181556/

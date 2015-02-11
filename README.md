@@ -85,13 +85,10 @@ https://virtualenvwrapper.readthedocs.org/en/latest/
 
 2. python
 
-3. postgresql
-http://paintincode.blogspot.ru/2012/08/install-postgresql-for-django-and.html
-(проверить pg_conf с django
-  https://stackoverflow.com/questions/7695962/postgresql-password-authentication-failed-for-user-postgres
-  )
+3. postgresql http://paintincode.blogspot.ru/2012/08/install-postgresql-for-django-and.html
+(проверить pg_conf с django https://stackoverflow.com/questions/7695962/postgresql-password-authentication-failed-for-user-postgres)
 
-  4. django
+4. django
 
   После разработки установить проект на pythonanywhere.com:
   http://habrahabr.ru/post/181556/

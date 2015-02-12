@@ -90,5 +90,4 @@ https://virtualenvwrapper.readthedocs.org/en/latest/
 
 4. django
 
-  После разработки установить проект на pythonanywhere.com:
-  http://habrahabr.ru/post/181556/
+  После разработки установить проект в Docker кондейнер:

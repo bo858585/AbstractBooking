@@ -9,6 +9,8 @@ urlpatterns = patterns('',
     # url(r'^$', 'Booking.views.home', name='home'),
     # url(r'^Booking/', include('Booking.foo.urls')),
 
+    url(r'^booking/', include('booking.urls')),
+
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 

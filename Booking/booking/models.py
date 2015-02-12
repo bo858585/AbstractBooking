@@ -19,7 +19,7 @@ class Booking(models.Model):
 
     title = models.CharField(max_length=50)
     text = models.TextField(max_length=200)
-    price = models.IntegerField(default=100)
+    price = models.DecimalField(max_digits=8, decimal_places=2, default=100)
     status = models.CharField(
         choices=STATUS_CHOICES,
         default=PENDING,

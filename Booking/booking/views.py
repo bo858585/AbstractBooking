@@ -1,16 +1,19 @@
 from django.shortcuts import render
 from django.views.generic.edit import CreateView
 from django.http import HttpResponseRedirect
+from django.contrib.auth.decorators import login_required
+
 
 from .models import Booking
 from .forms import BookingForm
+from Booking.views import LoginRequiredMixin
 
 
-class BookingCreate(CreateView):
+class BookingCreate(LoginRequiredMixin, CreateView):
     model = Booking
     fields = ['title', 'text', 'price']
     form_class = BookingForm
-    success_url = '/'
+    success_url = '/home/'
 
     def form_valid(self, form):
         self.object = form.save(commit=False)

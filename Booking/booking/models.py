@@ -26,7 +26,7 @@ class Booking(models.Model):
         max_length=30
     )
     customer = models.ForeignKey(User, related_name='customer_booking')
-    performer = models.ForeignKey(User, null=True, related_name='performer_booking')
+    performer = models.ForeignKey(User, null=True, blank=True, related_name='performer_booking')
     date = models.DateTimeField(auto_now_add=True)
 
     def set_performer(self, performer):

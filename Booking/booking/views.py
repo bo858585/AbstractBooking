@@ -31,3 +31,5 @@ class BookingCreate(LoginRequiredMixin, CreateView):
 
 class BookingListView(ListView):
     model = Booking
+    paginate_by = 20
+    queryset = Booking.objects.exclude(status__exact=Booking.COMPLETED).order_by('-date')

@@ -6,7 +6,7 @@
 
 <h1>Список заказов</h1>
 
-<table cellpadding="10" cellspacing="0" border="0" class="display" id="example">
+<table align="center" cellpadding="10" cellspacing="0" border="0" class="display" id="example">
   <thead>
     <tr>
       <th>Название</th>
@@ -32,6 +32,22 @@
     {% endfor %}
 </tbody>
 </table>
+
+{% if is_paginated %}
+<div align="center" class="pagination">
+  <span class="page-links">
+    {% if page_obj.has_previous %}
+        <a href="/booking/booking_list/?page={{ page_obj.previous_page_number }}">предыдущая</a>
+    {% endif %}
+    <span class="page-current">
+        Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+    </span>
+    {% if page_obj.has_next %}
+        <a href="/booking/booking_list/?page={{ page_obj.next_page_number }}">следующая</a>
+    {% endif %}
+  </span>
+</div>
+{% endif %}
 
 {% endif %}
 

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if user.is_authenticated %}
+
+<h1>Список заказов</h1>
+
+<table cellpadding="10" cellspacing="0" border="0" class="display" id="example">
+  <thead>
+    <tr>
+      <th>Название</th>
+      <th>Текст</th>
+      <th>Цена</th>
+      <th>Статус</th>
+      <th>Заказчик</th>
+      <th>Исполнитель</th>
+      <th>Дата создания</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for article in object_list %}
+    <tr>
+        <td>{{ article.title }}</td>
+        <td>{{ article.text }}</td>
+        <td>{{ article.price }}</td>
+        <td>{{ article.status }}</td>
+        <td>{{ article.customer }}</td>
+        <td>{% if article.performer %} {{ article.performer }} {% endif %}</td>
+        <td>{{ article.date|date:'Y-m-d H:i' }}</td>
+      </tr>
+    {% endfor %}
+</tbody>
+</table>
+
+{% endif %}
+
+{% endblock %}

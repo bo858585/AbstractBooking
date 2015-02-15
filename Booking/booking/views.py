@@ -4,6 +4,7 @@ from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import permission_required
+from django.views.generic.list import ListView
 
 from .models import Booking
 from .forms import BookingForm
@@ -14,7 +15,7 @@ class BookingCreate(LoginRequiredMixin, CreateView):
     model = Booking
     fields = ['title', 'text', 'price']
     form_class = BookingForm
-    success_url = '/home/'
+    success_url = "/booking/booking_list/"
 
     @method_decorator(login_required)
     @method_decorator(permission_required('booking.add_booking', raise_exception=True))
@@ -26,3 +27,7 @@ class BookingCreate(LoginRequiredMixin, CreateView):
         self.object.customer = self.request.user
         self.object.save()
         return HttpResponseRedirect(self.get_success_url())
+
+
+class BookingListView(ListView):
+    model = Booking

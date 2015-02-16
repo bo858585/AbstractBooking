@@ -17,31 +17,46 @@
       <th>Заказчик</th>
       <th>Исполнитель</th>
       <th>Дата создания</th>
+      <th>Ваши действия</th>
     </tr>
   </thead>
   <tbody>
-    {% for booking in object_list %}
+    {% for booking in bookings %}
     <tr>
-      <td>{{ booking.title }}</td>
-      <td>{{ booking.text }}</p></td>
-      <td>{{ booking.price }}</td>
+      <td>{{ booking.0.title }}</td>
+      <td>{{ booking.0.text }}</p></td>
+      <td>{{ booking.0.price }}</td>
       <td>
-        {% if booking.status == "pending" %}
+        {% if booking.0.status == "pending" %}
             Ожидает выполнения
         {% else %}
-            {% if booking.status == "running" %}
+            {% if booking.0.status == "running" %}
                 Взят на исполнение
             {% else %}
-                {% if booking.status == "completed" %}
+                {% if booking.0.status == "completed" %}
                     Завершен
                 {% endif %}
             {% endif %}
         {% endif %}
       </td>
-      <td>{{ booking.customer }}</td>
-      <td>{% if booking.performer %} {{ booking.performer }} {% else %} Нет {% endif %}</td>
-      <td>{{ booking.date|date:'Y-m-d H:i' }}</td>
-      <td>{% if booking. %}{% endif %}</td>
+      <td>{{ booking.0.customer }}</td>
+      <td>{% if booking.0.performer %} {{ booking.0.performer }} {% else %} Нет {% endif %}</td>
+      <td>{{ booking.0.date|date:'Y-m-d H:i' }}</td>
+      <td>
+          {% if booking.1 == 'can_take' %}
+              <button type="button submit" class="btn btn-success">
+                  Взять
+              </button>
+          {% endif %}
+          {% if booking.1 == 'can_view' %}
+              --
+          {% endif %}
+          {% if booking.1 == 'can_complete' %}
+              <button type="button submit" class="btn btn-success">
+                  Завершить
+              </button>
+          {% endif %}
+      </td>
     </tr>
     {% endfor %}
   </tbody>

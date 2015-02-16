@@ -7,12 +7,15 @@ from django.contrib.auth.models import User
 
 class Booking(models.Model):
     """Booking"""
+    class Meta:
+    	default_permissions = ()
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
 
     STATUS_CHOICES = (
-        (PENDING, u"Ожидает выполнения" ),
+        (PENDING, u"Ожидает исполнителя" ),
         (RUNNING, u"Взят на исполнение" ),
         (COMPLETED, u"Завершен" ),
     )

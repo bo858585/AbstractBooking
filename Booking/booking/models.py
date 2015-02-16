@@ -17,8 +17,8 @@ class Booking(models.Model):
         (COMPLETED, u"Завершен" ),
     )
 
-    title = models.CharField(max_length=50)
-    text = models.TextField(max_length=200)
+    title = models.CharField(max_length=100)
+    text = models.TextField(max_length=500)
     price = models.DecimalField(max_digits=8, decimal_places=2, default=100)
     status = models.CharField(
         choices=STATUS_CHOICES,

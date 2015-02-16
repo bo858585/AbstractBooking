@@ -1,4 +1,24 @@
-<form action="" method="post">{% csrf_token %}
-  {{ form.as_p }}
-  <input type="submit" value="Create" />
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Сделать заказ</h1>
+<form role="form" action="" method="post">{% csrf_token %}
+  <div class="form-group">
+      {{ form.title.errors }}
+      <input type="text" name="title" id="title_id" class="form-control span10" placeholder="Название" maxlength="100"/>
+  </div>
+  <div class="form-group">
+      {{ form.text.errors }}
+      <textarea class="field span10" name="text" id="text_id" class="form-control" rows="30" cols="100" placeholder="Описание" 200></textarea>
+  </div>
+  <div class="form-group">
+    {{ form.price.errors }}
+    <input type="text" name="price" id="price_id" class="form-control span10" placeholder="Цена" maxlength="8"/>
+  </div>
+  <button type="button submit" class="btn btn-success">
+    <i class="icon-user icon-white"></i>Заказать
+  </button>
 </form>
+
+{% endblock %}

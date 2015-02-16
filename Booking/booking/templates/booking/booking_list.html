@@ -6,7 +6,8 @@
 
 <h1>Список заказов</h1>
 
-<table align="center" cellpadding="10" cellspacing="0" border="0" class="display" id="example">
+<div class="table-responsive">
+<table class="table" id="example">
   <thead>
     <tr>
       <th>Название</th>
@@ -21,29 +22,30 @@
   <tbody>
     {% for article in object_list %}
     <tr>
-        <td>{{ article.title }}</td>
-        <td>{{ article.text }}</td>
-        <td>{{ article.price }}</td>
-        <td>{{ article.status }}</td>
-        <td>{{ article.customer }}</td>
-        <td>{% if article.performer %} {{ article.performer }} {% endif %}</td>
-        <td>{{ article.date|date:'Y-m-d H:i' }}</td>
-      </tr>
+      <td>{{ article.title }}</td>
+      <td>{{ article.text }}</p></td>
+      <td>{{ article.price }}</td>
+      <td>{{ article.status }}</td>
+      <td>{{ article.customer }}</td>
+      <td>{% if article.performer %} {{ article.performer }} {% endif %}</td>
+      <td>{{ article.date|date:'Y-m-d H:i' }}</td>
+    </tr>
     {% endfor %}
-</tbody>
+  </tbody>
 </table>
+</div>
 
 {% if is_paginated %}
 <div align="center" class="pagination">
   <span class="page-links">
     {% if page_obj.has_previous %}
-        <a href="/booking/booking_list/?page={{ page_obj.previous_page_number }}">предыдущая</a>
+    <a href="/booking/booking_list/?page={{ page_obj.previous_page_number }}">предыдущая</a>
     {% endif %}
     <span class="page-current">
-        Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+      Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
     </span>
     {% if page_obj.has_next %}
-        <a href="/booking/booking_list/?page={{ page_obj.next_page_number }}">следующая</a>
+    <a href="/booking/booking_list/?page={{ page_obj.next_page_number }}">следующая</a>
     {% endif %}
   </span>
 </div>

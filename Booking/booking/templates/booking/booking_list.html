@@ -20,15 +20,28 @@
     </tr>
   </thead>
   <tbody>
-    {% for article in object_list %}
+    {% for booking in object_list %}
     <tr>
-      <td>{{ article.title }}</td>
-      <td>{{ article.text }}</p></td>
-      <td>{{ article.price }}</td>
-      <td>{{ article.status }}</td>
-      <td>{{ article.customer }}</td>
-      <td>{% if article.performer %} {{ article.performer }} {% endif %}</td>
-      <td>{{ article.date|date:'Y-m-d H:i' }}</td>
+      <td>{{ booking.title }}</td>
+      <td>{{ booking.text }}</p></td>
+      <td>{{ booking.price }}</td>
+      <td>
+        {% if booking.status == "pending" %}
+            Ожидает выполнения
+        {% else %}
+            {% if booking.status == "running" %}
+                Взят на исполнение
+            {% else %}
+                {% if booking.status == "completed" %}
+                    Завершен
+                {% endif %}
+            {% endif %}
+        {% endif %}
+      </td>
+      <td>{{ booking.customer }}</td>
+      <td>{% if booking.performer %} {{ booking.performer }} {% else %} Нет {% endif %}</td>
+      <td>{{ booking.date|date:'Y-m-d H:i' }}</td>
+      <td>{% if booking. %}{% endif %}</td>
     </tr>
     {% endfor %}
   </tbody>

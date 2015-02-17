@@ -34,3 +34,9 @@ class Booking(models.Model):
 
     def set_performer(self, performer):
         self.performer = performer
+        self.status = self.RUNNING
+        self.save()
+
+    def complete(self):
+        self.status = self.COMPLETED
+        self.save()

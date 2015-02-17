@@ -8,10 +8,17 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import permission_required
 from django.views.generic.list import ListView
 from django.contrib.auth import get_user_model
+from django.views.generic.edit import FormView
+from django.shortcuts import render_to_response
+from django.template import RequestContext
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
 
 from .models import Booking
 from .forms import BookingForm
 from Booking.views import LoginRequiredMixin
+
+import json
 
 
 class BookingCreate(LoginRequiredMixin, CreateView):
@@ -69,7 +76,6 @@ class BookingListView(LoginRequiredMixin, ListView):
 
             if o.status == Booking.PENDING:
                 if not user.has_perm("booking.add_booking"):
-                    print 11
                     permissions_list.append(self.CAN_TAKE)
                 else:
                     permissions_list.append(self.CAN_VIEW)#tested
@@ -78,7 +84,6 @@ class BookingListView(LoginRequiredMixin, ListView):
             # Такой пользователь может завершать заказ.
             else:
                 if o.status == Booking.RUNNING:
-                    print o.customer, user
                     if o.customer == user:
                         permissions_list.append(self.CAN_COMPLETE)#
                     else:
@@ -89,4 +94,35 @@ class BookingListView(LoginRequiredMixin, ListView):
                         permissions_list.append(self.CAN_VIEW)
 
         context['bookings'] = zip(context['object_list'], permissions_list)
+
         return context
+
+
+@login_required
+def serve_booking_view(request):
+    if request.method == "POST":
+        if request.is_ajax():
+            booking = Booking.objects.get(id=request.POST['id'])
+            booking.set_performer(request.user)
+            return HttpResponse(json.dumps({'request_status': Booking.RUNNING}), content_type="application/json")
+        else:
+            booking = Booking.objects.get(id=request.POST['booking'])
+            booking.set_performer(request.user)
+            return HttpResponseRedirect("/booking/booking_list/")
+
+    return HttpResponse("")
+
+
+@login_required
+def complete_booking_view(request):
+    if request.method == "POST":
+        if request.is_ajax():
+            booking = Booking.objects.get(id=request.POST['id'])
+            booking.complete()
+            return HttpResponse(json.dumps({'request_status': Booking.RUNNING}), content_type="application/json")
+        else:
+            booking = Booking.objects.get(id=request.POST['booking'])
+            booking.complete()
+            return HttpResponseRedirect("/booking/booking_list/")
+
+    return HttpResponse("")

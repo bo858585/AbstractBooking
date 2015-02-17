@@ -21,6 +21,9 @@
     </tr>
   </thead>
   <tbody>
+    {% load staticfiles %}
+    <script src="{% static 'js/booking.js' %}"></script>
+
     {% for booking in bookings %}
     <tr>
       <td>{{ booking.0.title }}</td>
@@ -44,17 +47,13 @@
       <td>{{ booking.0.date|date:'Y-m-d H:i' }}</td>
       <td>
           {% if booking.1 == 'can_take' %}
-              <button type="button submit" class="btn btn-success">
-                  Взять
-              </button>
+              {% include "booking/serve.html" with val=booking.0 %}
           {% endif %}
           {% if booking.1 == 'can_view' %}
               --
           {% endif %}
           {% if booking.1 == 'can_complete' %}
-              <button type="button submit" class="btn btn-success">
-                  Завершить
-              </button>
+              {% include "booking/complete.html" with val=booking.0 %}
           {% endif %}
       </td>
     </tr>
@@ -67,13 +66,13 @@
 <div align="center" class="pagination">
   <span class="page-links">
     {% if page_obj.has_previous %}
-    <a href="/booking/booking_list/?page={{ page_obj.previous_page_number }}">предыдущая</a>
+        <a href="/booking/booking_list/?page={{ page_obj.previous_page_number }}">предыдущая</a>
     {% endif %}
     <span class="page-current">
       Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
     </span>
     {% if page_obj.has_next %}
-    <a href="/booking/booking_list/?page={{ page_obj.next_page_number }}">следующая</a>
+        <a href="/booking/booking_list/?page={{ page_obj.next_page_number }}">следующая</a>
     {% endif %}
   </span>
 </div>

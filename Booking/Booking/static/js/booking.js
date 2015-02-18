@@ -1,6 +1,4 @@
 $( document ).ready(function() {
-    console.log( "ready!" );
-
     $( "button.serve, button.complete").on('click', function( event ) {
         event.preventDefault();
         event.stopPropagation();
@@ -26,7 +24,7 @@ $( document ).ready(function() {
                 console.log(msg["request_status"]);
                 if (msg["request_status"] == "running") {
                     console.log($(this).parent());
-                    $(this).prev().remove();
+                    $(this).parent().empty();
                 } else {
                   console.log( "Error");
                 }

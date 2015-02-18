@@ -20,7 +20,7 @@ class BookingTestCase(TestCase):
             customer=user1
         )
 
-    def test_assigning_performer(self):
+    def test_booking_processing(self):
         """Checks that booking can be assigned to the performer"""
         booking = Booking.objects.get(title='test_booking')
         user = User.objects.get(username='johndow')
@@ -28,3 +28,6 @@ class BookingTestCase(TestCase):
         booking.save()
         booking = Booking.objects.get(title='test_booking')
         self.assertEqual(booking.performer, user)
+        booking.complete()
+        booking.save()
+        self.assertEqual(booking.status, Booking.COMPLETED)

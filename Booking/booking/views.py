@@ -104,11 +104,10 @@ class BookingListView(LoginRequiredMixin, ListView):
 @login_required
 def serve_booking_view(request):
     """
-    При клике на кнопку “Взять заказ” производится проверка, хватит ли
-    заказчику этого заказа денег на оплату заказа - цена введенного заказа
-    должна быть меньше (либо равна) сумме, которые у него есть на счету.
-    Со счета заказчика списывается цена заказа. Заказу назначается  статус
-    “Выполняется”. Заказ сохраняется. Эти операции - в одной транзакции.
+    При клике исполнителя (performer) на кнопку “Взять заказ” производится
+    проверка, хватит ли заказчику этого заказа (customer) денег на оплату заказа.
+    Если хватит, со счета заказчика списывается цена заказа. Заказу назначается
+    статус “Выполняется”. Заказ сохраняется. Эти операции - в одной транзакции.
     (это значит, что системе в ленту заказов - виртульно, согласно статусу
     заказа - перешли деньги со счета заказчика, то есть система выступает
     посредником между заказчиком и исполнителем). Страница обновляется.
@@ -126,13 +125,16 @@ def serve_booking_view(request):
                     if booking_status != Booking.PENDING:
                         status_message = "wrong status"
                     else:
-                        print request.user.profile.cash, booking.price
+                        customer = booking.get_customer()
+                        print customer
+                        is_enough_cash = customer.profile.has_enough_cash_for_booking(booking.price)
+                        print customer.profile.cash, booking.price, is_enough_cash
                         # Проверка средств на счету пользователя.
-                        if request.user.profile.cash >= booking.price:
+                        if is_enough_cash:
                             # Их вычет со счета. И назначение заказу исполнителя.
-                            request.user.profile.cash -= booking.price
-                            request.user.profile.save()
-                            print request.user.profile.cash, booking.price
+                            customer.profile.decrease_cash(booking.price)
+                            customer.profile.save()
+                            print customer.profile.cash, booking.price
                             status_message = Booking.RUNNING
                             booking.set_performer(request.user)
                             status_message = "money_had_transferred_to_system"
@@ -152,11 +154,14 @@ def serve_booking_view(request):
                     if booking_status != Booking.PENDING:
                         messages.error(request, u'Неверный статус заказа')
                     else:
-                        print request.user.profile.cash, booking.price
-                        if request.user.profile.cash >= booking.price:
-                            request.user.profile.cash -= booking.price
-                            request.user.profile.save()
-                            print request.user.profile.cash, booking.price
+                        customer = booking.get_customer()
+                        print customer
+                        is_enough_cash = customer.profile.has_enough_cash_for_booking(booking.price)
+                        print customer.profile.cash, booking.price, is_enough_cash
+                        if is_enough_cash:
+                            customer.profile.decrease_cash(booking.price)
+                            customer.profile.save()
+                            print customer.profile.cash, booking.price
                             messages.info(request, u'Деньги перешли на счет системы')
                             booking.set_performer(request.user)
                         else:
@@ -168,7 +173,6 @@ def serve_booking_view(request):
 
 
 @login_required
-@transaction.atomic
 def complete_booking_view(request):
     """
     При нажатии на кнопку “Завершить заказ” сумма заказа в ленте в зависимости
@@ -202,7 +206,7 @@ def complete_booking_view(request):
                     if booking_status != Booking.RUNNING:
                         messages.error(request, u'Неверный статус заказа')
                     else:
-                        messages.info(request, u'Заказ зевершен')
+                        messages.info(request, u'Заказ завершен')
                         booking.complete()
             except IntegrityError:
                 messages.error(request, u'Внутренняя ошибка')

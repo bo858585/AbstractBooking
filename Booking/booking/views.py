@@ -16,6 +16,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.contrib import messages
 from django.db import IntegrityError
+from django.core.exceptions import ObjectDoesNotExist
 
 from .models import Booking
 from .forms import BookingForm
@@ -127,7 +128,12 @@ def serve_booking_view(request):
                     else:
                         customer = booking.get_customer()
                         print customer
-                        is_enough_cash = customer.profile.has_enough_cash_for_booking(booking.price)
+                        try:
+                            is_enough_cash = customer.profile.has_enough_cash_for_booking(booking.price)
+                        except ObjectDoesNotExist:
+                            status_message = 'there_is_no_user_profile'
+                            return HttpResponse(json.dumps({'request_status': status_message}),
+                                content_type="application/json")
                         print customer.profile.cash, booking.price, is_enough_cash
                         # Проверка средств на счету пользователя.
                         if is_enough_cash:
@@ -173,6 +179,7 @@ def serve_booking_view(request):
 
 
 @login_required
+@permission_required('booking.add_booking', raise_exception=True)
 def complete_booking_view(request):
     """
     При нажатии на кнопку “Завершить заказ” сумма заказа в ленте в зависимости

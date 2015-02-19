@@ -34,10 +34,19 @@ class BookingModelsTestCase(TestCase):
 
 
 class TestBooking(TestCase):
-    def test_call_view_without_being_logged_in(self):
+    def test_calling_view_without_being_logged_in(self):
         response = self.client.get('/booking/create_booking/', follow=True)
         self.assertRedirects(response, '/accounts/login/?next=/booking/create_booking/')
         response = self.client.get('/booking/booking_list/', follow=True)
         self.assertRedirects(response, '/accounts/login/?next=/booking/booking_list/')
         response = self.client.get('/home/', follow=True)
         self.assertEqual(response.status_code, 200)
+
+
+def test_calling_view_without_being_logged_in(self):
+    response = self.client.get('/booking/create_booking/', follow=True)
+    self.assertRedirects(response, '/accounts/login/?next=/booking/create_booking/')
+    response = self.client.get('/booking/booking_list/', follow=True)
+    self.assertRedirects(response, '/accounts/login/?next=/booking/booking_list/')
+    response = self.client.get('/home/', follow=True)
+    self.assertEqual(response.status_code, 200)

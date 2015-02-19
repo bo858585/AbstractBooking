@@ -2,6 +2,8 @@
 
 from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
+
 
 # Create your models here.
 
@@ -40,3 +42,14 @@ class Booking(models.Model):
     def complete(self):
         self.status = self.COMPLETED
         self.save()
+
+    def get_status(self):
+        return self.status
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, related_name='profile')
+    cash = models.DecimalField(max_digits=6, decimal_places=2)
+
+    def __unicode__(self):
+        return self.user.username

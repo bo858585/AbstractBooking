@@ -13,6 +13,9 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
+from django.contrib import messages
+from django.db import IntegrityError
 
 from .models import Booking
 from .forms import BookingForm
@@ -78,7 +81,7 @@ class BookingListView(LoginRequiredMixin, ListView):
                 if not user.has_perm("booking.add_booking"):
                     permissions_list.append(self.CAN_TAKE)
                 else:
-                    permissions_list.append(self.CAN_VIEW)#tested
+                    permissions_list.append(self.CAN_VIEW)
 
             # Заказ кем-то исполняется и текущий пользователь создавал этот заказ.
             # Такой пользователь может завершать заказ.
@@ -101,49 +104,108 @@ class BookingListView(LoginRequiredMixin, ListView):
 @login_required
 def serve_booking_view(request):
     """
-    (Приведен предполагаемый способ работы завершения заказа)
     При клике на кнопку “Взять заказ” производится проверка, хватит ли
     заказчику этого заказа денег на оплату заказа - цена введенного заказа
     должна быть меньше (либо равна) сумме, которые у него есть на счету.
-    Со счета заказчика списывается цена заказа. Она помещается в соответствующее
-    поле модели заказа. Заказу назначается  статус “Выполняется”.
-    Заказ сохраняется. (это значит, что системе в ленту заказов - виртульно,
-    согласно статусу заказа - перешли деньги со счета заказчика, то есть система
-    выступает посредником между заказчиком и исполнителем). Страница обновляется.
-    После редиректа кнопка “Взять заказ” на заказе исчезает, появляется кнопка
+    Со счета заказчика списывается цена заказа. Заказу назначается  статус
+    “Выполняется”. Заказ сохраняется. Эти операции - в одной транзакции.
+    (это значит, что системе в ленту заказов - виртульно, согласно статусу
+    заказа - перешли деньги со счета заказчика, то есть система выступает
+    посредником между заказчиком и исполнителем). Страница обновляется.
+    Кнопка “Взять заказ” на заказе исчезает, появляется кнопка
     “Завершить заказ”, доступная только заказчику, сделавшему этот заказ.
     """
     if request.method == "POST":
         if request.is_ajax():
-            booking = Booking.objects.get(id=request.POST['id'])
-            booking.set_performer(request.user)
-            return HttpResponse(json.dumps({'request_status': Booking.RUNNING}), content_type="application/json")
+            try:
+                with transaction.atomic():
+                    # Проверка текущего статуса заказа
+                    booking = Booking.objects.get(id=request.POST['id'])
+                    booking_status = booking.get_status()
+                    print booking_status
+                    if booking_status != Booking.PENDING:
+                        status_message = "wrong status"
+                    else:
+                        print request.user.profile.cash, booking.price
+                        # Проверка средств на счету пользователя.
+                        if request.user.profile.cash >= booking.price:
+                            # Их вычет со счета. И назначение заказу исполнителя.
+                            request.user.profile.cash -= booking.price
+                            request.user.profile.save()
+                            print request.user.profile.cash, booking.price
+                            status_message = Booking.RUNNING
+                            booking.set_performer(request.user)
+                            status_message = "money_had_transferred_to_system"
+                        else:
+                            status_message = "insufficient funds"
+            except IntegrityError:
+                # Проблема с generating relationships
+                status_message = 'internal_error'
+            return HttpResponse(json.dumps({'request_status': status_message}),
+                content_type="application/json")
         else:
-            booking = Booking.objects.get(id=request.POST['booking'])
-            booking.set_performer(request.user)
+            try:
+                with transaction.atomic():
+                    booking = Booking.objects.get(id=request.POST['booking'])
+                    booking_status = booking.get_status()
+                    print booking_status
+                    if booking_status != Booking.PENDING:
+                        messages.error(request, u'Неверный статус заказа')
+                    else:
+                        print request.user.profile.cash, booking.price
+                        if request.user.profile.cash >= booking.price:
+                            request.user.profile.cash -= booking.price
+                            request.user.profile.save()
+                            print request.user.profile.cash, booking.price
+                            messages.info(request, u'Деньги перешли на счет системы')
+                            booking.set_performer(request.user)
+                        else:
+                            messages.info(request, u'Недостаточно средств')
+            except IntegrityError:
+                messages.error(request, u'Внутренняя ошибка')
             return HttpResponseRedirect("/booking/booking_list/")
-
     return HttpResponse("")
 
 
 @login_required
+@transaction.atomic
 def complete_booking_view(request):
     """
-    (Приведен предполагаемый способ работы завершения заказа)
     При нажатии на кнопку “Завершить заказ” сумма заказа в ленте в зависимости
-    от комиссии (целое число от 0 до 100 процентов, указывается в настройках)
+    от комиссии (целое число от 0 до 100 процентов, указывается в админке)
     делится на две части - на счет исполнителя заказа и системы поступают две
     эти части суммы. Заказу назначается статус “Завершен”. Страница обновляется.
     Заказ исчезает из ленты как выполнившийся.
     """
     if request.method == "POST":
         if request.is_ajax():
-            booking = Booking.objects.get(id=request.POST['id'])
-            booking.complete()
-            return HttpResponse(json.dumps({'request_status': Booking.RUNNING}), content_type="application/json")
+            try:
+                with transaction.atomic():
+                    booking = Booking.objects.get(id=request.POST['id'])
+                    booking_status = booking.get_status()
+                    print booking_status
+                    if booking_status != Booking.RUNNING:
+                        status_message = "wrong status"
+                    status_message = "completed"
+                    booking.complete()
+            except IntegrityError:
+                # Проблема с generating relationships
+                status_message = 'internal_error'
+            return HttpResponse(json.dumps({'request_status': status_message}),
+                content_type="application/json")
         else:
-            booking = Booking.objects.get(id=request.POST['booking'])
-            booking.complete()
+            try:
+                with transaction.atomic():
+                    booking = Booking.objects.get(id=request.POST['booking'])
+                    booking_status = booking.get_status()
+                    print booking_status
+                    if booking_status != Booking.RUNNING:
+                        messages.error(request, u'Неверный статус заказа')
+                    else:
+                        messages.info(request, u'Заказ зевершен')
+                        booking.complete()
+            except IntegrityError:
+                messages.error(request, u'Внутренняя ошибка')
             return HttpResponseRedirect("/booking/booking_list/")
 
     return HttpResponse("")

@@ -23,10 +23,13 @@ $( document ).ready(function() {
             success: function(msg){
                 console.log(msg["request_status"]);
                 if (msg["request_status"] == "running") {
-                    console.log($(this).parent());
-                    $(this).parent().empty();
+                    console.log("Назначено пользователю");
                 } else {
-                  console.log( "Error");
+                    if (msg["request_status"] == "insufficient funds") {
+                        console.log( "Недостаточно средств");
+                    } else {
+                        console.log( "Error");
+                    }
                 }
                 return false;
             },

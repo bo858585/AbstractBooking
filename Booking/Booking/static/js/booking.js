@@ -21,18 +21,8 @@ $( document ).ready(function() {
             data: { "id": value, "csrfmiddlewaretoken": csrfmiddlewaretoken },
             dataType: "json",
             success: function(msg){
-                console.log(msg["request_status"]);
                 $("div.alert").remove();
                 $("div#greeting").after('<div class="alert alert-info">' + msg["request_status"] + '</div>');
-                if (msg["request_status"] == "running") {
-                    console.log("Назначено пользователю");
-                } else {
-                    if (msg["request_status"] == "insufficient funds") {
-                        console.log( "Недостаточно средств");
-                    } else {
-                        console.log( "Error");
-                    }
-                }
                 return false;
             },
             error: function(jqXHR, textStatus, errorThrown){

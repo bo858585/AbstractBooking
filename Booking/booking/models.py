@@ -81,7 +81,7 @@ class Booking(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='profile')
-    cash = models.DecimalField(max_digits=6, decimal_places=2)
+    cash = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal('0.0'))
 
     def __unicode__(self):
         return self.user.username

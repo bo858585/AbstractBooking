@@ -28,7 +28,7 @@ class Booking(models.Model):
     )
 
     title = models.CharField(max_length=100)
-    text = models.TextField(max_length=500)
+    text = models.TextField(max_length=4000)
     price = models.DecimalField(max_digits=8, decimal_places=2, default=100)
     status = models.CharField(
         choices=STATUS_CHOICES,

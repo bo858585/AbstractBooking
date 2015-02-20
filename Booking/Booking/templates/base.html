@@ -30,6 +30,11 @@
     <a href="{% url 'django.contrib.auth.views.logout' %}">logout</a>
     {% endif %}
   </div>
+  {% if messages %}
+    {% for message in messages %}
+        <div{% if message.tags %} class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</div>
+    {% endfor %}
+  {% endif %}
   {% block content %}
   {% endblock %}
 </body>

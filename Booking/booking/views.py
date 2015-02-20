@@ -17,6 +17,7 @@ from django.db import transaction
 from django.contrib import messages
 from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.decorators import user_passes_test
 
 from .models import Booking
 from .forms import BookingForm
@@ -103,6 +104,7 @@ class BookingListView(LoginRequiredMixin, ListView):
 
 
 @login_required
+@user_passes_test(lambda u: u.has_perm('booking.perform_perm'))
 def serve_booking_view(request):
     """
     При клике исполнителя (performer) на кнопку “Взять заказ” производится
@@ -197,8 +199,14 @@ def complete_booking_view(request):
                     print booking_status
                     if booking_status != Booking.RUNNING:
                         status_message = "wrong status"
-                    status_message = "completed"
-                    booking.complete()
+                    else:
+                        booking_customer = booking.get_customer()
+                        print booking_customer, request.user
+                        if booking_customer != request.user:
+                            status_message = "wrong user"
+                        else:
+                            status_message = "completed"
+                            booking.complete()
             except IntegrityError:
                 # Проблема с generating relationships
                 status_message = 'internal_error'
@@ -213,8 +221,14 @@ def complete_booking_view(request):
                     if booking_status != Booking.RUNNING:
                         messages.error(request, u'Неверный статус заказа')
                     else:
-                        messages.info(request, u'Заказ завершен')
-                        booking.complete()
+                        booking_customer = booking.get_customer()
+                        print booking_customer, request.user
+                        if booking_customer != request.user:
+                            status_message = u"Не этот пользователь создавал заказ"
+                            messages.error(request, status_message)
+                        else:
+                            messages.info(request, u'Заказ завершен')
+                            booking.complete()
             except IntegrityError:
                 messages.error(request, u'Внутренняя ошибка')
             return HttpResponseRedirect("/booking/booking_list/")

@@ -13,6 +13,9 @@ class Booking(models.Model):
     """Booking"""
     class Meta:
     	default_permissions = ()
+        permissions = (
+            ("perform_perm", u"Ability to perform created booking"),
+        )
 
     PENDING = "pending"
     RUNNING = "running"

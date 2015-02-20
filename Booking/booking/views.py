@@ -126,14 +126,14 @@ def serve_booking_view(request):
                     booking_status = booking.get_status()
                     print booking_status
                     if booking_status != Booking.PENDING:
-                        status_message = "wrong status"
+                        status_message = u"Неверный статус заказа"
                     else:
                         customer = booking.get_customer()
                         print customer
                         try:
                             is_enough_cash = customer.profile.has_enough_cash_for_booking(booking.price)
                         except ObjectDoesNotExist:
-                            status_message = 'there_is_no_user_profile'
+                            status_message = u'У создателя заказа нет расширенного профиля'
                             return HttpResponse(json.dumps({'request_status': status_message}),
                                 content_type="application/json")
                         print customer.profile.cash, booking.price, is_enough_cash
@@ -145,12 +145,12 @@ def serve_booking_view(request):
                             print customer.profile.cash, booking.price
                             status_message = Booking.RUNNING
                             booking.set_performer(request.user)
-                            status_message = "money_had_transferred_to_system"
+                            status_message = u"Деньги перешли на счет системы"
                         else:
-                            status_message = "insufficient funds"
+                            status_message = u"Недостаточно средств"
             except IntegrityError:
                 # Проблема с generating relationships
-                status_message = 'internal_error'
+                status_message = u'Внутренняя ошибка'
             return HttpResponse(json.dumps({'request_status': status_message}),
                 content_type="application/json")
         else:
@@ -198,18 +198,18 @@ def complete_booking_view(request):
                     booking_status = booking.get_status()
                     print booking_status
                     if booking_status != Booking.RUNNING:
-                        status_message = "wrong status"
+                        status_message = u"Неверный статус заказа"
                     else:
                         booking_customer = booking.get_customer()
                         print booking_customer, request.user
                         if booking_customer != request.user:
-                            status_message = "wrong user"
+                            status_message = u"Это не ваш заказ"
                         else:
-                            status_message = "completed"
+                            status_message = u"Заказ завершен"
                             booking.complete()
             except IntegrityError:
                 # Проблема с generating relationships
-                status_message = 'internal_error'
+                status_message = u'Внутренняя ошибка'
             return HttpResponse(json.dumps({'request_status': status_message}),
                 content_type="application/json")
         else:

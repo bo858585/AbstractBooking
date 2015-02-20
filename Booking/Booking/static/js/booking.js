@@ -22,6 +22,8 @@ $( document ).ready(function() {
             dataType: "json",
             success: function(msg){
                 console.log(msg["request_status"]);
+                $("div.alert").remove();
+                $("div#greeting").after('<div class="alert alert-info">' + msg["request_status"] + '</div>');
                 if (msg["request_status"] == "running") {
                     console.log("Назначено пользователю");
                 } else {

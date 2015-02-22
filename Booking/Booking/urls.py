@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
+
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 
-from .views import HomepageView
+from .views import HomepageView, user_login
 
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
@@ -15,7 +17,7 @@ urlpatterns = patterns('',
 
     url(r'^booking/', include('booking.urls')),
 
-    (r'^accounts/login/$', 'django.contrib.auth.views.login'),
+    (r'^accounts/login/$', user_login),
     (r'^accounts/logout/$', 'django.contrib.auth.views.logout'),
 
     (r'^home/$', HomepageView.as_view()),

@@ -173,7 +173,7 @@ def serve_booking_view(request):
                             messages.info(request, u'Деньги перешли на счет системы')
                             booking.set_performer(request.user)
                         else:
-                            messages.info(request, u'Недостаточно средств')
+                            messages.error(request, u'Недостаточно средств')
             except IntegrityError:
                 messages.error(request, u'Внутренняя ошибка')
             return HttpResponseRedirect("/booking/booking_list/")

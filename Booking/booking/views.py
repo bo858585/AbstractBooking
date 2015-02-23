@@ -39,8 +39,7 @@ class BookingCreate(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
-        self.object.customer = self.request.user
-        self.object.save()
+        self.object.set_customer(self.request.user)
         return HttpResponseRedirect(self.get_success_url())
 
 

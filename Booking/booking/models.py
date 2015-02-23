@@ -10,7 +10,8 @@ from decimal import Decimal
 # Create your models here.
 
 class Booking(models.Model):
-    """Booking"""
+    """Модель заказа"""
+
     class Meta:
     	default_permissions = ()
         permissions = (
@@ -47,11 +48,25 @@ class Booking(models.Model):
         self.status = self.RUNNING
         self.save()
 
+    def set_customer(self, customer):
+        """
+        Установка заказчика для заказа.
+        """
+        self.customer = customer
+        self.save()
+
     def get_customer(self):
         """
         Получение модели исполнителя
         """
         return self.customer
+
+    def get_performer(self):
+        """
+        Получение модели исполнителя
+        """
+        return self.performer
+
 
     def complete(self):
         """

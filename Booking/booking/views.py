@@ -155,6 +155,7 @@ def serve_booking_view(request):
         else:
             try:
                 with transaction.atomic():
+                    print request.POST
                     booking = Booking.objects.get(id=request.POST['booking'])
                     booking_status = booking.get_status()
                     print booking_status

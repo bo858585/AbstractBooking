@@ -124,5 +124,6 @@ CHOICES = [ “pending”, “running”, “completed” ]
       ###Тесты
       ```sh
       $ cd /home/user/work/Booking/AbstractBooking/Booking
-      $ python manage.py test booking
+      $ python manage.py test booking.tests.TestBooking
+      $ python manage.py test booking.tests.BookingModelsTestCase
       ```

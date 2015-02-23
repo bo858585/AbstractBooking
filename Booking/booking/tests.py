@@ -39,14 +39,8 @@ class BookingModelsTestCase(TestCase):
 
 
 class TestBooking(TestCase):
-    def test_calling_view_without_being_logged_in(self):
-        response = self.client.get('/booking/create_booking/', follow=True)
-        self.assertRedirects(response, '/accounts/login/?next=/booking/create_booking/')
-        response = self.client.get('/booking/booking_list/', follow=True)
-        self.assertRedirects(response, '/accounts/login/?next=/booking/booking_list/')
-        response = self.client.get('/home/', follow=True)
-        self.assertEqual(response.status_code, 200)
-
+    def setUp(self):
+        pass
 
     def test_calling_view_without_being_logged_in(self):
         response = self.client.get('/booking/create_booking/', follow=True)
@@ -56,14 +50,15 @@ class TestBooking(TestCase):
         response = self.client.get('/home/', follow=True)
         self.assertEqual(response.status_code, 200)
 
-    def test_create_two_users_create_booking_and_serve(self):
+
+    def test_create_customer_and_performer_create_booking_and_serve(self):
         """
         Создать двух пользователей - заказчик и исполнитель. Один создает заказ.
         Другой берет его на выполнение. Первый завершает заказ.
         """
         pass
 
-    def test_create_two_users_create_booking_and_dont_serve(self):
+    def test_create_three_users_create_booking_and_2nd_customer_can_not_serve(self):
         """
         Создать трех пользователей - два заказчика и исполнитель.
         Заказчик создает заказ. Исполнитель берет на обслуживание.
@@ -71,7 +66,7 @@ class TestBooking(TestCase):
         """
         pass
 
-    def test_performer_and_can_not_create_booking(self):
+    def test_performer_can_not_perform_booking_of_other_performer(self):
         """
         Создать двух пользователей - заказчик и заказчик. Один создает заказ.
         Второму не хватает прав для взятия не выполнение.

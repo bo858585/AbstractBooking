@@ -48,11 +48,13 @@ class Booking(models.Model):
         self.save()
 
     def get_customer(self):
+        """
+        Получение модели исполнителя
+        """
         return self.customer
 
     def complete(self):
         """
-        Перевод средств со счета заказчика на счет исполнителя.
         Перевод средств со счета заказчика на счет исполнителя.
         Установка завершающего статуса для заказа.
         """
@@ -87,15 +89,22 @@ class UserProfile(models.Model):
         return self.user.username
 
     def increase_cash(self, _cash):
+        """
+        Увеличение денег на счету пользователя.
+        """
         self.cash += _cash
 
     def decrease_cash(self, _cash):
+        """
+        Уменьшение денег на счету пользователя.
+        """
         self.cash -= _cash
 
     def has_enough_cash_for_booking(self, price):
         """
         Цена введенного заказа должна быть меньше (либо равна) сумме,
-        которая заказчика есть на счету
+        которая заказчика есть на счету, для того, чтобы он мог оплатить заказ.
+        Проверяется при взятии заказа исполнителем.
         """
         if self.cash >= price:
             return True
@@ -104,6 +113,10 @@ class UserProfile(models.Model):
 
 
 class SystemAccount(models.Model):
+    """
+    Счет системы, на который происходит перевод процента-комиссии цены заказа
+    со счета заказа после его завершения.
+    """
     account = models.DecimalField(max_digits=6, decimal_places=2,
         default=Decimal('0.00'))
     commission = models.DecimalField(max_digits=3, decimal_places=2,

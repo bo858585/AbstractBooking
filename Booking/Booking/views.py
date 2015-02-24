@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+"""
+Views, общие для проекта.
+"""
+
 from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
 from django.template import RequestContext
@@ -12,6 +16,9 @@ from django.contrib import messages
 
 
 class HomepageView(TemplateView):
+    """
+    Сюда попадает пользователь после входа.
+    """
     template_name = "homepage.html"
 
 
@@ -24,6 +31,9 @@ class LoginRequiredMixin(object):
 
 
 def user_login(request):
+    """
+    Имплементация формы авторизации
+    """
     # Like before, obtain the context for the user's request.
     context = RequestContext(request)
 

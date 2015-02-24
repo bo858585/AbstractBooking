@@ -1,7 +1,13 @@
 $( document ).ready(function() {
+    var xhr;
+
     $( "button.serve, button.complete").on('click', function( event ) {
         event.preventDefault();
         event.stopPropagation();
+
+        if(xhr && xhr.readyState != 4){
+            xhr.abort();
+        }
 
         var value = $(this).prev().val();
         var csrfmiddlewaretoken = $(this).prev().prev().val();
@@ -15,7 +21,7 @@ $( document ).ready(function() {
             }
         }
 
-        $.ajax({
+        xhr = $.ajax({
             type: "POST",
             url: "/booking/" + url_part,
             data: { "id": value, "csrfmiddlewaretoken": csrfmiddlewaretoken },

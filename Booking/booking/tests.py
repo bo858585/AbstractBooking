@@ -88,6 +88,53 @@ class BookingViewsTestCase(TestCase):
         user2.user_permissions.add(permission)
         user2.save()
 
+
+        # Создание группы с правами
+        booking_content = ContentType.objects.get_for_model(Booking)
+
+        customers, is_created = Group.objects.get_or_create(name="customers")
+        add = Permission.objects.create(name="Can add", codename="can_add", content_type=booking_content)
+        change = Permission.objects.create(name="Can change", codename="can_change", content_type=booking_content)
+        delete = Permission.objects.create(name="Can delete", codename="can_delete", content_type=booking_content)
+
+        customers.permissions.add(add)
+        customers.permissions.add(change)
+        customers.permissions.add(delete)
+        customers.save()
+
+        self.assertEqual(len(customers.permissions.all()), 3)
+        self.assertEqual(customers.permissions.all()[0], add)
+        self.assertEqual(customers.permissions.all()[1], change)
+        self.assertEqual(customers.permissions.all()[2], delete)
+
+
+        # Назначение пользователю группы
+        user1.groups.add(customers)
+        user1.save()
+
+        self.assertEqual(len(user1.groups.all()), 1)
+        self.assertEqual(user1.groups.all()[0], customers)
+
+
+        # Создание группы с правами
+        performers, is_created = Group.objects.get_or_create(name="performers")
+        perform = Permission.objects.create(name="Can perform",
+            codename="perform", content_type=booking_content)
+
+        performers.permissions.add(perform)
+        performers.save()
+
+        self.assertEqual(len(performers.permissions.all()), 1)
+        self.assertEqual(performers.permissions.all()[0], perform)
+
+
+        # Назначение пользоателю группы
+        user2.groups.add(performers)
+        user2.save()
+
+        self.assertEqual(len(user2.groups.all()), 1)
+        self.assertEqual(user2.groups.all()[0], performers)
+
     def test_calling_view_without_being_logged_in(self):
         response = self.client.get('/booking/create_booking/', follow=True)
         self.assertRedirects(response, '/accounts/login/?next=/booking/create_booking/')

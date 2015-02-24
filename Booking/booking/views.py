@@ -123,25 +123,21 @@ def serve_booking_view(request):
                     # Проверка текущего статуса заказа
                     booking = Booking.objects.get(id=request.POST['id'])
                     booking_status = booking.get_status()
-                    print booking_status
                     if booking_status != Booking.PENDING:
                         status_message = u"Неверный статус заказа"
                     else:
                         customer = booking.get_customer()
-                        print customer
                         try:
                             is_enough_cash = customer.profile.has_enough_cash_for_booking(booking.price)
                         except ObjectDoesNotExist:
                             status_message = u'У создателя заказа нет расширенного профиля'
                             return HttpResponse(json.dumps({'request_status': status_message}),
                                 content_type="application/json")
-                        print customer.profile.cash, booking.price, is_enough_cash
                         # Проверка средств на счету пользователя.
                         if is_enough_cash:
                             # Их вычет со счета. И назначение заказу исполнителя.
                             customer.profile.decrease_cash(booking.price)
                             customer.profile.save()
-                            print customer.profile.cash, booking.price
                             status_message = Booking.RUNNING
                             booking.set_performer(request.user)
                             status_message = u"Деньги перешли на счет системы"
@@ -155,21 +151,16 @@ def serve_booking_view(request):
         else:
             try:
                 with transaction.atomic():
-                    print request.POST
                     booking = Booking.objects.get(id=request.POST['booking'])
                     booking_status = booking.get_status()
-                    print booking_status
                     if booking_status != Booking.PENDING:
                         messages.error(request, u'Неверный статус заказа')
                     else:
                         customer = booking.get_customer()
-                        print customer
                         is_enough_cash = customer.profile.has_enough_cash_for_booking(booking.price)
-                        print customer.profile.cash, booking.price, is_enough_cash
                         if is_enough_cash:
                             customer.profile.decrease_cash(booking.price)
                             customer.profile.save()
-                            print customer.profile.cash, booking.price
                             messages.info(request, u'Деньги перешли на счет системы')
                             booking.set_performer(request.user)
                         else:
@@ -196,12 +187,10 @@ def complete_booking_view(request):
                 with transaction.atomic():
                     booking = Booking.objects.get(id=request.POST['id'])
                     booking_status = booking.get_status()
-                    print booking_status
                     if booking_status != Booking.RUNNING:
                         status_message = u"Неверный статус заказа"
                     else:
                         booking_customer = booking.get_customer()
-                        print booking_customer, request.user
                         if booking_customer != request.user:
                             status_message = u"Это не ваш заказ"
                         else:
@@ -217,12 +206,10 @@ def complete_booking_view(request):
                 with transaction.atomic():
                     booking = Booking.objects.get(id=request.POST['booking'])
                     booking_status = booking.get_status()
-                    print booking_status
                     if booking_status != Booking.RUNNING:
                         messages.error(request, u'Неверный статус заказа')
                     else:
                         booking_customer = booking.get_customer()
-                        print booking_customer, request.user
                         if booking_customer != request.user:
                             status_message = u"Не этот пользователь создавал заказ"
                             messages.error(request, status_message)

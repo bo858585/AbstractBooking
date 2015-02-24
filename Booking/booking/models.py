@@ -77,15 +77,10 @@ class Booking(models.Model):
         comission = system_account.get_comission()
         cash_for_system = self.price*comission
         cash_for_performer = self.price*(1 - comission)
-        print comission, cash_for_system, cash_for_performer
-        print system_account.account
         system_account.transfer_cash(cash_for_system)
         system_account.save()
-        print system_account.account
-        print self.performer.profile.cash
         self.performer.profile.increase_cash(cash_for_performer)
         self.performer.profile.save()
-        print self.performer.profile.cash
         self.status = self.COMPLETED
         self.save()
 

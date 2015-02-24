@@ -27,7 +27,7 @@
     {% for booking in bookings %}
     <tr>
       <td>{{ booking.0.title }}</td>
-      <td>{{ booking.0.text }}</p></td>
+      <td>{{ booking.0.text|linebreaks }}</p></td>
       <td>{{ booking.0.price }}</td>
       <td>
         {% if booking.0.status == "pending" %}

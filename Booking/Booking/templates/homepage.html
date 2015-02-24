@@ -1,7 +1,4 @@
 {% extends "base.html" %}
 
 {% block content %}
-    {% if user.is_authenticated %}
-        <a href="{% url 'booking-list' %}"><h1>Список заказов</h1></a>
-    {% endif %}
 {% endblock %}

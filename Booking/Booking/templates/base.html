@@ -25,16 +25,26 @@
 
   <div id="greeting">
     {% if user.is_anonymous %}
-    <a href="{% url 'django.contrib.auth.views.login' %}">login</a>
+    <a href="{% url 'django.contrib.auth.views.login' %}">Вход</a>
     {% else %}
     Привет, {{ user }}.
-    <a href="{% url 'django.contrib.auth.views.logout' %}">logout</a>
+    <a href="{% url 'django.contrib.auth.views.logout' %}">Выход</a>
     {% endif %}
   </div>
   {% if messages %}
     {% for message in messages %}
         <div{% if message.tags %} class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</div>
     {% endfor %}
+  {% endif %}
+  <br>
+  {% if user.is_authenticated %}
+  {% load has_group %}
+  <ol class="breadcrumb" class="active">
+    <li><a href="{% url 'booking-list' %}">Список заказов</a></li>
+    {% if user|has_group:"customers" %}
+    <li><a href="{% url 'create-booking' %}">Сделать заказ</a></li>
+    {% endif %}
+  </ol>
   {% endif %}
   {% block content %}
   {% endblock %}

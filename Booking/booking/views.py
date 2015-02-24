@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from django.shortcuts import render
+"""
+Views для работы с заказами
+"""
+
 from django.views.generic.edit import CreateView
 from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import permission_required
 from django.views.generic.list import ListView
-from django.contrib.auth import get_user_model
-from django.views.generic.edit import FormView
-from django.shortcuts import render_to_response
-from django.template import RequestContext
 from django.http import HttpResponse
-from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.contrib import messages
 from django.db import IntegrityError
@@ -27,13 +25,17 @@ import json
 
 
 class BookingCreate(LoginRequiredMixin, CreateView):
+    """
+    Создание заказа
+    """
     model = Booking
     fields = ['title', 'text', 'price']
     form_class = BookingForm
     success_url = "/booking/booking_list/"
 
     @method_decorator(login_required)
-    @method_decorator(permission_required('booking.add_booking', raise_exception=True))
+    @method_decorator(permission_required('booking.add_booking',
+        raise_exception=True))
     def dispatch(self, *args, **kwargs):
         return super(BookingCreate, self).dispatch(*args, **kwargs)
 
@@ -57,8 +59,8 @@ class BookingListView(LoginRequiredMixin, ListView):
     - "Взять заказ"("can_take") отображается только для исполнителей -
     заказ ожидает выполнения(статус "pending").
 
-    - "Завершить заказ" ("can_complete") - только для пользователя, создавшего  заказ -
-    заказ "Взят на исполнение"(статус "running").
+    - "Завершить заказ" ("can_complete") - только для пользователя, создавшего
+    заказ - заказ "Взят на исполнение"(статус "running").
 
     - Заказ не отображается в таблице - “Завершен”(статус "completed").
     """
@@ -86,7 +88,8 @@ class BookingListView(LoginRequiredMixin, ListView):
                 else:
                     permissions_list.append(self.CAN_VIEW)
 
-            # Заказ кем-то исполняется и текущий пользователь создавал этот заказ.
+            # Заказ кем-то исполняется и текущий пользователь создавал этот
+            # заказ.
             # Такой пользователь может завершать заказ.
             else:
                 if o.status == Booking.RUNNING:
@@ -109,13 +112,13 @@ class BookingListView(LoginRequiredMixin, ListView):
 def serve_booking_view(request):
     """
     При клике исполнителя (performer) на кнопку “Взять заказ” производится
-    проверка, хватит ли заказчику этого заказа (customer) денег на оплату заказа.
-    Если хватит, со счета заказчика списывается цена заказа. Заказу назначается
-    статус “Выполняется”. Заказ сохраняется. Эти операции - в одной транзакции.
-    (это значит, что системе в ленту заказов - виртульно, согласно статусу
-    заказа - перешли деньги со счета заказчика, то есть система выступает
-    посредником между заказчиком и исполнителем). Страница обновляется.
-    Кнопка “Взять заказ” на заказе исчезает, появляется кнопка
+    проверка, хватит ли заказчику этого заказа (customer) денег на оплату
+    заказа. Если хватит, со счета заказчика списывается цена заказа. Заказу
+    назначается статус “Выполняется”. Заказ сохраняется. Эти операции - в одной
+    транзакции. (это значит, что системе в ленту заказов - виртульно, согласно
+    статусу заказа - перешли деньги со счета заказчика, то есть система
+    выступает посредником между заказчиком и исполнителем). Страница
+    обновляется. Кнопка “Взять заказ” на заказе исчезает, появляется кнопка
     “Завершить заказ”, доступная только заказчику, сделавшему этот заказ.
     """
     if request.method == "POST":
@@ -130,15 +133,19 @@ def serve_booking_view(request):
                     else:
                         customer = booking.get_customer()
                         try:
-                            is_enough_cash = customer.profile.has_enough_cash_for_booking(
-                                booking.price)
+                            is_enough_cash = \
+                                customer.profile.has_enough_cash_for_booking(
+                                    booking.price
+                                )
                         except ObjectDoesNotExist:
-                            status_message = u'У создателя заказа нет расширенного профиля'
-                            return HttpResponse(json.dumps({'request_status': status_message}),
-                                                content_type="application/json")
+                            status_message = \
+                                u'У создателя заказа нет расширенного профиля'
+                            return HttpResponse(json.dumps({'request_status':
+                                status_message}),
+                                content_type="application/json")
                         # Проверка средств на счету пользователя.
                         if is_enough_cash:
-                            # Их вычет со счета. И назначение заказу исполнителя.
+                            # Их вычет со счета. И назначение заказу исполнителя
                             customer.profile.decrease_cash(booking.price)
                             customer.profile.save()
                             status_message = Booking.RUNNING
@@ -160,8 +167,10 @@ def serve_booking_view(request):
                         messages.error(request, u'Неверный статус заказа')
                     else:
                         customer = booking.get_customer()
-                        is_enough_cash = customer.profile.has_enough_cash_for_booking(
-                            booking.price)
+                        is_enough_cash = \
+                            customer.profile.has_enough_cash_for_booking(
+                                booking.price
+                            )
                         if is_enough_cash:
                             customer.profile.decrease_cash(booking.price)
                             customer.profile.save()
@@ -216,7 +225,8 @@ def complete_booking_view(request):
                     else:
                         booking_customer = booking.get_customer()
                         if booking_customer != request.user:
-                            status_message = u"Не этот пользователь создавал заказ"
+                            status_message = \
+                                u"Не этот пользователь создавал заказ"
                             messages.error(request, status_message)
                         else:
                             messages.info(request, u'Заказ завершен')

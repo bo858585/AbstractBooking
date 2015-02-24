@@ -127,3 +127,32 @@ CHOICES = [ “pending”, “running”, “completed” ]
       $ python manage.py test booking.tests.BookingModelTestCase
       $ python manage.py test booking.tests.BookingViewsTestCase
       ```
+
+###Установка
+
+```sh
+$ apt-get install nginx
+$ sudo apt-get install uwsgi uwsgi-plugin-python
+$ cp /etc/nginx/sites-available/default /etc/nginx/sites-available/_default
+$ nano /etc/nginx/sites-available/default
+
+$ # Вставить в default конфигурацию ниже:
+
+$ server {
+$    listen   80;
+$    # access_log /var/log/nginx/test/access_log;
+$    server_name localhost;
+$    location / {
+$        root            /var/www/uwsgi;
+$        uwsgi_pass      127.0.0.1:3031;
+$            include         uwsgi_params;
+$        }
+$   }
+$   
+$   uwsgi --socket :3031 --chdir ./ --env DJANGO_SETTINGS_MODULE=Booking.settings --module "django.core.wsgi:get_wsgi_application()"
+$   
+$   sudo /etc/init.d/nginx reload
+```
+
+Возможная конфигурация nginx под нагрузкой
+http://habrahabr.ru/post/198982/

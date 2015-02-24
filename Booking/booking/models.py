@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
+"""
+Модели
+"""
+
 from django.db import models
 from django.contrib.auth.models import User
-from django.db import models
 
 from decimal import Decimal
 
@@ -14,6 +17,10 @@ class Booking(models.Model):
     """Модель заказа"""
 
     class Meta:
+        """
+        Права по-умолчанию обнулены.
+        Добавлено право на исполнение заказа.
+        """
         default_permissions = ()
         permissions = (
             ("perform_perm", u"Ability to perform created booking"),
@@ -44,7 +51,8 @@ class Booking(models.Model):
 
     def set_performer(self, performer):
         """
-        Установка исполнителя для заказа. Установка выполняющегося статуса для заказа.
+        Установка исполнителя для заказа. Установка выполняющегося статуса
+        для заказа.
         """
         self.performer = performer
         self.status = self.RUNNING
@@ -93,6 +101,9 @@ class Booking(models.Model):
 
 
 class UserProfile(models.Model):
+    """
+    Расширенный профиль пользователя
+    """
     user = models.OneToOneField(User, related_name='profile')
     cash = models.DecimalField(
         max_digits=6, decimal_places=2, default=Decimal('0.0'))
@@ -136,7 +147,13 @@ class SystemAccount(models.Model):
                                      default=Decimal('0.03'))
 
     def transfer_cash(self, _cash):
+        """
+        Пополнение средств на счету
+        """
         self.account += _cash
 
     def get_comission(self):
+        """
+        Комиссия системы
+        """
         return self.commission

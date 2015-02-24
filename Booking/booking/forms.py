@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
+"""
+Формы заказов
+"""
+
 from django.forms import ModelForm
 from .models import Booking
-from django import forms
 
 
 class BookingForm(ModelForm):

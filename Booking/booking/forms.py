@@ -6,6 +6,7 @@ from django import forms
 
 
 class BookingForm(ModelForm):
+
     """
     Форма для создания заказа
     """

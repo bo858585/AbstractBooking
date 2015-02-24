@@ -15,7 +15,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='userprofile',
             name='cash',
-            field=models.DecimalField(default=Decimal('0.0'), max_digits=6, decimal_places=2),
+            field=models.DecimalField(
+                default=Decimal('0.0'), max_digits=6, decimal_places=2),
             preserve_default=True,
         ),
     ]

@@ -15,7 +15,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='booking',
             name='performer',
-            field=models.ForeignKey(related_name='performer_booking', blank=True, to=settings.AUTH_USER_MODEL, null=True),
+            field=models.ForeignKey(
+                related_name='performer_booking', blank=True, to=settings.AUTH_USER_MODEL, null=True),
             preserve_default=True,
         ),
     ]

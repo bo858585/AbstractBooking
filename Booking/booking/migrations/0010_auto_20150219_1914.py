@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='booking',
-            options={'default_permissions': (), 'permissions': (('serve_perm', 'Ability to take and serve created booking'),)},
+            options={'default_permissions': (), 'permissions': (
+                ('serve_perm', 'Ability to take and serve created booking'),)},
         ),
     ]

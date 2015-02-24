@@ -14,7 +14,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='booking',
             name='price',
-            field=models.DecimalField(default=100, max_digits=6, decimal_places=0),
+            field=models.DecimalField(
+                default=100, max_digits=6, decimal_places=0),
             preserve_default=True,
         ),
     ]

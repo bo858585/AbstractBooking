@@ -15,7 +15,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='systemaccount',
             name='commission',
-            field=models.DecimalField(default=Decimal('0.03'), max_digits=3, decimal_places=2),
+            field=models.DecimalField(
+                default=Decimal('0.03'), max_digits=3, decimal_places=2),
             preserve_default=True,
         ),
     ]

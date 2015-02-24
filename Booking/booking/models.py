@@ -10,10 +10,11 @@ from decimal import Decimal
 # Create your models here.
 
 class Booking(models.Model):
+
     """Модель заказа"""
 
     class Meta:
-    	default_permissions = ()
+        default_permissions = ()
         permissions = (
             ("perform_perm", u"Ability to perform created booking"),
         )
@@ -23,9 +24,9 @@ class Booking(models.Model):
     COMPLETED = "completed"
 
     STATUS_CHOICES = (
-        (PENDING, u"Ожидает исполнителя" ),
-        (RUNNING, u"Взят на исполнение" ),
-        (COMPLETED, u"Завершен" ),
+        (PENDING, u"Ожидает исполнителя"),
+        (RUNNING, u"Взят на исполнение"),
+        (COMPLETED, u"Завершен"),
     )
 
     title = models.CharField(max_length=100)
@@ -37,7 +38,8 @@ class Booking(models.Model):
         max_length=30
     )
     customer = models.ForeignKey(User, related_name='customer_booking')
-    performer = models.ForeignKey(User, null=True, blank=True, related_name='performer_booking')
+    performer = models.ForeignKey(
+        User, null=True, blank=True, related_name='performer_booking')
     date = models.DateTimeField(auto_now_add=True)
 
     def set_performer(self, performer):
@@ -67,7 +69,6 @@ class Booking(models.Model):
         """
         return self.performer
 
-
     def complete(self):
         """
         Перевод средств со счета заказчика на счет исполнителя.
@@ -75,8 +76,8 @@ class Booking(models.Model):
         """
         system_account = SystemAccount.objects.all()[0]
         comission = system_account.get_comission()
-        cash_for_system = self.price*comission
-        cash_for_performer = self.price*(1 - comission)
+        cash_for_system = self.price * comission
+        cash_for_performer = self.price * (1 - comission)
         system_account.transfer_cash(cash_for_system)
         system_account.save()
         self.performer.profile.increase_cash(cash_for_performer)
@@ -93,7 +94,8 @@ class Booking(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='profile')
-    cash = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal('0.0'))
+    cash = models.DecimalField(
+        max_digits=6, decimal_places=2, default=Decimal('0.0'))
 
     def __unicode__(self):
         return self.user.username
@@ -123,14 +125,15 @@ class UserProfile(models.Model):
 
 
 class SystemAccount(models.Model):
+
     """
     Счет системы, на который происходит перевод процента-комиссии цены заказа
     со счета заказа после его завершения.
     """
     account = models.DecimalField(max_digits=6, decimal_places=2,
-        default=Decimal('0.00'))
+                                  default=Decimal('0.00'))
     commission = models.DecimalField(max_digits=3, decimal_places=2,
-        default=Decimal('0.03'))
+                                     default=Decimal('0.03'))
 
     def transfer_cash(self, _cash):
         self.account += _cash

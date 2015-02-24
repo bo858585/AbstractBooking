@@ -44,6 +44,7 @@ class BookingCreate(LoginRequiredMixin, CreateView):
 
 
 class BookingListView(LoginRequiredMixin, ListView):
+
     """
     В начале на заказе есть кнопка “Взять заказ”, которая отображается только
     исполнителям.
@@ -63,7 +64,8 @@ class BookingListView(LoginRequiredMixin, ListView):
     """
     model = Booking
     paginate_by = 20
-    queryset = Booking.objects.exclude(status__exact=Booking.COMPLETED).order_by('-date')
+    queryset = Booking.objects.exclude(
+        status__exact=Booking.COMPLETED).order_by('-date')
 
     CAN_COMPLETE = "can_complete"
     CAN_TAKE = "can_take"
@@ -89,9 +91,9 @@ class BookingListView(LoginRequiredMixin, ListView):
             else:
                 if o.status == Booking.RUNNING:
                     if o.customer == user:
-                        permissions_list.append(self.CAN_COMPLETE)#
+                        permissions_list.append(self.CAN_COMPLETE)
                     else:
-                        permissions_list.append(self.CAN_VIEW)#tested
+                        permissions_list.append(self.CAN_VIEW)  # tested
                 else:
                     if o.status == Booking.COMPLETED:
                         # Если заказ завершен, его можно только просматривать.
@@ -128,11 +130,12 @@ def serve_booking_view(request):
                     else:
                         customer = booking.get_customer()
                         try:
-                            is_enough_cash = customer.profile.has_enough_cash_for_booking(booking.price)
+                            is_enough_cash = customer.profile.has_enough_cash_for_booking(
+                                booking.price)
                         except ObjectDoesNotExist:
                             status_message = u'У создателя заказа нет расширенного профиля'
                             return HttpResponse(json.dumps({'request_status': status_message}),
-                                content_type="application/json")
+                                                content_type="application/json")
                         # Проверка средств на счету пользователя.
                         if is_enough_cash:
                             # Их вычет со счета. И назначение заказу исполнителя.
@@ -147,7 +150,7 @@ def serve_booking_view(request):
                 # Проблема с generating relationships
                 status_message = u'Внутренняя ошибка'
             return HttpResponse(json.dumps({'request_status': status_message}),
-                content_type="application/json")
+                                content_type="application/json")
         else:
             try:
                 with transaction.atomic():
@@ -157,11 +160,13 @@ def serve_booking_view(request):
                         messages.error(request, u'Неверный статус заказа')
                     else:
                         customer = booking.get_customer()
-                        is_enough_cash = customer.profile.has_enough_cash_for_booking(booking.price)
+                        is_enough_cash = customer.profile.has_enough_cash_for_booking(
+                            booking.price)
                         if is_enough_cash:
                             customer.profile.decrease_cash(booking.price)
                             customer.profile.save()
-                            messages.info(request, u'Деньги перешли на счет системы')
+                            messages.info(
+                                request, u'Деньги перешли на счет системы')
                             booking.set_performer(request.user)
                         else:
                             messages.error(request, u'Недостаточно средств')
@@ -200,7 +205,7 @@ def complete_booking_view(request):
                 # Проблема с generating relationships
                 status_message = u'Внутренняя ошибка'
             return HttpResponse(json.dumps({'request_status': status_message}),
-                content_type="application/json")
+                                content_type="application/json")
         else:
             try:
                 with transaction.atomic():

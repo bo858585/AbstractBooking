@@ -150,9 +150,11 @@ $            include         uwsgi_params;
 $        }
 $   }
 $   
-$   uwsgi --socket :3031 --chdir ./ --env DJANGO_SETTINGS_MODULE=Booking.settings --module "django.core.wsgi:get_wsgi_application()"
+$ cd /home/user/work/Booking/AbstractBooking/Booking
+$ 
+$ uwsgi --socket :3031 --chdir ./ --env DJANGO_SETTINGS_MODULE=Booking.settings --module "django.core.wsgi:get_wsgi_application()"
 $   
-$   sudo /etc/init.d/nginx reload
+$ sudo /etc/init.d/nginx reload
 ```
 
 Возможная конфигурация nginx под нагрузкой

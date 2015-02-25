@@ -10,11 +10,27 @@
 У любого заказчика, исполнителя может быть только по одному счету - поле в расширенном профиле модели пользователя. Профиль содержит поле "Счет":
 DecimalField, NOT NULL, default = 100.
 
-###Две группы пользователей с правами:
 1. customers - booking.add_booking (создавать заказ).
+###Две группы пользователей с правами:
 2. performers - booking.perform_perm (брать заказ на исполнение).  
 
-Тестовые пользователи в админке: user (admin), custuser, perfuser - с соответствующими правами. (Описать процесс заведения моделей в админке)
+Тестовые пользователи в админке: user (admin), custuser, perfuser - с соответствующими правами.
+
+###Настройка и использование админки:
+System accounts - создать один счет системы, указать текущие денежные средства и комиссию системы.
+Пользователи - создать два тестовых пользоателя custuser, perfuser.
+User profiles	- создать профили для этих двух пользователей, указать их денежные средства.
+Группы - создать две группы customers, performers.
+
+Добавить группам права:
+performers - booking | booking | Ability to perform created booking
+customers - booking | booking | Can add booking
+customers - booking | booking | Can change booking
+customers - booking | booking | Can delete booking
+
+Добавить пользователям группы:
+custuser - customers
+perfuser - performers
 
 ###Элементы управления заказами в пользовательском интерфейсе:
 - Для исполнителя: исполняет заказ (кнопка в элементе списка в BookingListView).

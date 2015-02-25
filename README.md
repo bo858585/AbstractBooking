@@ -106,20 +106,23 @@ $ apt-get install nginx
 $ sudo apt-get install uwsgi uwsgi-plugin-python
 $ cp /etc/nginx/sites-available/default /etc/nginx/sites-available/_default
 $ nano /etc/nginx/sites-available/default
+$
+$# Вставить в default конфигурацию ниже:
 
-$ # Вставить в default конфигурацию ниже:
-$
-$ server {
-$    listen   80;
-$    # access_log /var/log/nginx/test/access_log;
-$    server_name localhost;
-$    location / {
-$        root            /home/user/work/Booking/AbstractBooking/Booking/Booking;
-$        uwsgi_pass      127.0.0.1:3031;
-$            include         uwsgi_params;
-$        }
-$   }
-$
+$server {
+$  listen   80;
+$  server_name localhost;
+$  
+$  location /static/  {
+$    alias /home/user/work/Booking/AbstractBooking/Booking/static_for_deploy/;
+$  }
+$  
+$  location / {
+$    root            /home/user/work/Booking/AbstractBooking/Booking/Booking;
+$    uwsgi_pass      127.0.0.1:3031;
+$    include         uwsgi_params;
+$  }
+$}
 $ cd /home/user/work/Booking/AbstractBooking/Booking
 $
 $ uwsgi --socket :3031 --chdir ./ --env DJANGO_SETTINGS_MODULE=Booking.settings --module "django.core.wsgi:get_wsgi_application()"

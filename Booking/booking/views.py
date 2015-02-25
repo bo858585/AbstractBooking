@@ -13,7 +13,7 @@ from django.views.generic.list import ListView
 from django.http import HttpResponse
 from django.db import transaction
 from django.contrib import messages
-from django.db import IntegrityError
+from django.db import DatabaseError
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import user_passes_test
 
@@ -153,7 +153,7 @@ def serve_booking_view(request):
                             status_message = u"Деньги перешли на счет системы"
                         else:
                             status_message = u"Недостаточно средств"
-            except IntegrityError:
+            except DatabaseError:
                 # Проблема с generating relationships
                 status_message = u'Внутренняя ошибка'
             return HttpResponse(json.dumps({'request_status': status_message}),
@@ -179,7 +179,7 @@ def serve_booking_view(request):
                             booking.set_performer(request.user)
                         else:
                             messages.error(request, u'Недостаточно средств')
-            except IntegrityError:
+            except DatabaseError:
                 messages.error(request, u'Внутренняя ошибка')
             return HttpResponseRedirect("/booking/booking_list/")
     return HttpResponse("")
@@ -210,7 +210,7 @@ def complete_booking_view(request):
                         else:
                             status_message = u"Заказ завершен"
                             booking.complete()
-            except IntegrityError:
+            except DatabaseError:
                 # Проблема с generating relationships
                 status_message = u'Внутренняя ошибка'
             return HttpResponse(json.dumps({'request_status': status_message}),
@@ -231,7 +231,7 @@ def complete_booking_view(request):
                         else:
                             messages.info(request, u'Заказ завершен')
                             booking.complete()
-            except IntegrityError:
+            except DatabaseError:
                 messages.error(request, u'Внутренняя ошибка')
             return HttpResponseRedirect("/booking/booking_list/")
 

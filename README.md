@@ -146,7 +146,7 @@ $
 $     # access_log /var/log/nginx/test/access_log;
 $ 
 $     location / {
-$             root            /home/user/work/Booking/AbstractBooking/Booking/Boo$
+$             root            /home/user/work/Booking/AbstractBooking/Booking/Booking;
 $             uwsgi_pass      127.0.0.1:3031;
 $             include         uwsgi_params;
 $     }

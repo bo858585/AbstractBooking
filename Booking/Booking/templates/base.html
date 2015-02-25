@@ -28,6 +28,7 @@
     <a href="{% url 'django.contrib.auth.views.login' %}">Вход</a>
     {% else %}
     Привет, {{ user }}.
+    На вашем счету {{ user.profile.cash }}.    
     <a href="{% url 'django.contrib.auth.views.logout' %}">Выход</a>
     {% endif %}
   </div>

@@ -4,20 +4,38 @@
 
 {% if user.is_authenticated %}
 
+<style>
+table {
+    table-layout: fixed;
+    word-wrap: break-word;
+    overflow: hidden;
+    border: 3px;
+}
+
+tr th#name { width: 7%; }
+tr th#text { width: 40%; }
+tr th#price { width: 6%; }
+tr th#status { width: 7%; }
+tr th#customer { width: 7%; }
+tr th#performer { width: 8%; }
+tr th#date { width: 9%; }
+tr th#actions { width: 8%; }
+
+</style>
 <h1>Список заказов</h1>
 
-<div class="table-responsive">
-<table class="table" id="example">
+<div class=".table-striped">
+<table class="table" id="booking_list">
   <thead>
     <tr>
-      <th>Название</th>
-      <th>Текст</th>
-      <th>Цена</th>
-      <th>Статус</th>
-      <th>Заказчик</th>
-      <th>Исполнитель</th>
-      <th>Дата создания</th>
-      <th>Ваши действия</th>
+      <th id="name">Название</th>
+      <th id="text">Текст</th>
+      <th id="price">Цена</th>
+      <th id="status">Статус</th>
+      <th id="customer">Заказчик</th>
+      <th id="performer">Исполнитель</th>
+      <th id="date">Дата создания</th>
+      <th id="actions">Ваши действия</th>
     </tr>
   </thead>
   <tbody>

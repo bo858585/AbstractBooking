@@ -85,7 +85,6 @@ class BookingListView(LoginRequiredMixin, ListView):
             if o.status == Booking.PENDING:
                 if not user.has_perm("booking.add_booking"):
                     # Тип пользователя - исполнитель.
-                    print o.customer
                     if o.customer.profile.has_enough_cash_for_booking(o.price):
                         # Такие пользователи могут брать заказы на выполнение,
                         # если у заказчика достаточно средств
@@ -94,8 +93,12 @@ class BookingListView(LoginRequiredMixin, ListView):
                         # Иначе - кнопка взятия заказа неактивна
                         permissions_list.append(self.NOT_ACTIVE)
                 else:
-                    # Остальные могут просматривать
-                    permissions_list.append(self.CAN_VIEW)
+                    if o.customer.profile.has_enough_cash_for_booking(o.price):
+                        # Остальные могут просматривать
+                        permissions_list.append(self.CAN_VIEW)
+                    else:
+                        # Иначе - кнопка взятия заказа неактивна
+                        permissions_list.append(self.NOT_ACTIVE)
             else:
                 # Заказ кем-то исполняется
                 if o.status == Booking.RUNNING:

@@ -72,6 +72,8 @@ class BookingListView(LoginRequiredMixin, ListView):
     CAN_COMPLETE = "can_complete"
     CAN_TAKE = "can_take"
     CAN_VIEW = "can_view"
+    # Кнопка взятия заказа неактивна
+    NOT_ACTIVE = "not_active"
 
     def get_context_data(self, **kwargs):
         context = super(BookingListView, self).get_context_data(**kwargs)
@@ -83,8 +85,14 @@ class BookingListView(LoginRequiredMixin, ListView):
             if o.status == Booking.PENDING:
                 if not user.has_perm("booking.add_booking"):
                     # Тип пользователя - исполнитель.
-                    # Такие пользователи могут брать заказы на выполнение.
-                    permissions_list.append(self.CAN_TAKE)
+                    print o.customer
+                    if o.customer.profile.has_enough_cash_for_booking(o.price):
+                        # Такие пользователи могут брать заказы на выполнение,
+                        # если у заказчика достаточно средств
+                        permissions_list.append(self.CAN_TAKE)
+                    else:
+                        # Иначе - кнопка взятия заказа неактивна
+                        permissions_list.append(self.NOT_ACTIVE)
                 else:
                     # Остальные могут просматривать
                     permissions_list.append(self.CAN_VIEW)

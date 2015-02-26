@@ -31,7 +31,11 @@
       <td>{{ booking.0.price }}</td>
       <td>
         {% if booking.0.status == "pending" %}
-            Ожидает выполнения
+            {% if booking.1 == 'not_active' %}
+                Неактивен
+            {% else %}
+                Ожидает выполнения
+            {% endif %}
         {% else %}
             {% if booking.0.status == "running" %}
                 Взят на исполнение
@@ -50,7 +54,6 @@
               {% include "booking/serve.html" with val=booking.0 %}
           {% endif %}
           {% if booking.1 == 'can_view' %}
-              --
           {% endif %}
           {% if booking.1 == 'can_complete' %}
               {% include "booking/complete.html" with val=booking.0 %}

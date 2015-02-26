@@ -4,7 +4,7 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 
-from .views import HomepageView, user_login
+from .views import HomepageView, user_login, BookingRegistrationView
 
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
@@ -21,11 +21,11 @@ urlpatterns = patterns('',
                        (r'^accounts/logout/$',
                         'django.contrib.auth.views.logout'),
 
+                       url(r'^accounts/register/$', BookingRegistrationView.as_view(), name='registration_register'),
+                       (r'^accounts/', include('registration.backends.simple.urls')),
+
                        (r'^home/$', HomepageView.as_view()),
                        (r'^$', HomepageView.as_view()),
-
-                       (r'^accounts/',
-                        include('registration.backends.simple.urls')),
 
                        # Uncomment the admin/doc line below to enable admin documentation:
                        # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

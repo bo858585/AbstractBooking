@@ -8,11 +8,13 @@ from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
 from django.template import RequestContext
 from django.shortcuts import render_to_response
-from django.contrib.auth import authenticate
 from django.http import HttpResponse
+from django.contrib.auth import authenticate
 from django.contrib.auth.views import login
 from django.http import HttpResponseRedirect
 from django.contrib import messages
+from django.core.urlresolvers import reverse
+from registration.backends.simple.views import RegistrationView
 
 
 class HomepageView(TemplateView):
@@ -72,3 +74,9 @@ def user_login(request):
         # No context variables to pass to the template system, hence the
         # blank dictionary object...
         return render_to_response('registration/login.html', {}, context)
+
+
+# Create a new class that redirects the user to the index page, if successful at logging
+class BookingRegistrationView(RegistrationView):
+    def get_success_url(self, request, user):
+        return reverse('booking-list')

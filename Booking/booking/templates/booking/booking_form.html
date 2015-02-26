@@ -2,6 +2,12 @@
 
 {% block content %}
 
+<style>
+    textarea {
+        border-radius : 5px;
+    }
+</style>
+
 <h1>Сделать заказ</h1>
 <form role="form" action="/booking/create_booking/" method="post">{% csrf_token %}
   <div class="form-group">
@@ -10,7 +16,7 @@
   </div>
   <div class="form-group">
       {{ form.text.errors }}
-      <textarea class="field span10" name="text" id="text_id" class="form-control" rows="30" cols="100" placeholder="Описание" 200></textarea>
+      <textarea class="field" name="text" id="text_id" class="form-control span10" rows="30" cols="100" placeholder="Описание" 200></textarea>
   </div>
   <div class="form-group">
     {{ form.price.errors }}

@@ -57,7 +57,7 @@ def user_login(request):
                 # If the account is valid and active, we can log the user in.
                 # We'll send the user back to the homepage.
                 login(request, user)
-                return HttpResponseRedirect('/')
+                return HttpResponseRedirect('/booking/booking_list/')
             else:
                 # An inactive account was used - no logging in!
                 return HttpResponse(u"Ваш аккаунт неактивен.")

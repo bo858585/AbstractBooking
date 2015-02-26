@@ -79,24 +79,25 @@ class BookingListView(LoginRequiredMixin, ListView):
         user = self.request.user
 
         for o in context['object_list']:
-            # Заказ ждет выполнения и тип текущего пользователя - исполнитель.
-            # Такие пользователи могут брать заказы на выполнение.
-
+            # Заказ ждет выполнения
             if o.status == Booking.PENDING:
                 if not user.has_perm("booking.add_booking"):
+                    # Тип пользователя - исполнитель.
+                    # Такие пользователи могут брать заказы на выполнение.
                     permissions_list.append(self.CAN_TAKE)
                 else:
+                    # Остальные могут просматривать
                     permissions_list.append(self.CAN_VIEW)
-
-            # Заказ кем-то исполняется и текущий пользователь создавал этот
-            # заказ.
-            # Такой пользователь может завершать заказ.
             else:
+                # Заказ кем-то исполняется
                 if o.status == Booking.RUNNING:
+                    # Текущий пользователь создавал этот заказ.
                     if o.customer == user:
+                        # Такой пользователь может завершать заказ.
                         permissions_list.append(self.CAN_COMPLETE)
                     else:
-                        permissions_list.append(self.CAN_VIEW)  # tested
+                        # Иначе - только просматривать
+                        permissions_list.append(self.CAN_VIEW)
                 else:
                     if o.status == Booking.COMPLETED:
                         # Если заказ завершен, его можно только просматривать.

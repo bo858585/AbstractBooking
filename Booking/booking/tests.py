@@ -163,7 +163,7 @@ class BookingViewsTestCase(TestCase):
         response = self.client.post('/accounts/login/',
                                     {'username': 'john', 'password': 'johnpassword'}, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'homepage.html')
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Просмотр списка заказов
         response = self.client.get('/booking/booking_list/')
@@ -204,7 +204,7 @@ class BookingViewsTestCase(TestCase):
         response = self.client.post('/accounts/login/',
                                     {'username': 'johndow', 'password': 'dowpassword'}, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'homepage.html')
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         user2 = User.objects.get(username='johndow')
 
@@ -235,7 +235,7 @@ class BookingViewsTestCase(TestCase):
         response = self.client.post('/accounts/login/',
                                     {'username': 'john', 'password': 'johnpassword'}, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'homepage.html')
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         user = User.objects.get(username='john')
 
@@ -278,7 +278,7 @@ class BookingViewsTestCase(TestCase):
         response = self.client.post('/accounts/login/',
                                     {'username': 'john', 'password': 'johnpassword'}, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'homepage.html')
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Просмотр списка заказов
         response = self.client.get('/booking/booking_list/')
@@ -319,7 +319,7 @@ class BookingViewsTestCase(TestCase):
         response = self.client.post('/accounts/login/',
                                     {'username': 'johndow', 'password': 'dowpassword'}, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'homepage.html')
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         user2 = User.objects.get(username='johndow')
 
@@ -350,7 +350,7 @@ class BookingViewsTestCase(TestCase):
         response = self.client.post('/accounts/login/',
                                     {'username': 'johnthird', 'password': 'thirdpassword'}, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'homepage.html')
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Закрытие заказа
         response = self.client.post('/booking/complete/',
@@ -391,7 +391,7 @@ class BookingViewsTestCase(TestCase):
         response = self.client.post('/accounts/login/',
                                     {'username': 'john', 'password': 'johnpassword'}, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'homepage.html')
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Просмотр списка заказов
         response = self.client.get('/booking/booking_list/')
@@ -432,7 +432,7 @@ class BookingViewsTestCase(TestCase):
         response = self.client.post('/accounts/login/',
                                     {'username': 'johnthird', 'password': 'thirdpassword'}, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'homepage.html')
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         #user3 = User.objects.get(username='johnthird')
 
@@ -460,7 +460,7 @@ class BookingViewsTestCase(TestCase):
         response = self.client.post('/accounts/login/',
                                     {'username': 'johndow', 'password': 'dowpassword'}, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'homepage.html')
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Просмотр списка заказов
         response = self.client.get('/booking/booking_list/')

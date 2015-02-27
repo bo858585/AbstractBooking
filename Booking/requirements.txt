@@ -1,6 +1,6 @@
 Django==1.7.4
 argparse==1.2.1
-django-datatables-view==1.12
-django-registration==1.0
+meld3==1.0.0
 psycopg2==2.6
+uWSGI==2.0.9
 wsgiref==0.1.2

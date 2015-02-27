@@ -162,7 +162,7 @@ def serve_booking_view(request):
                             customer.profile.save()
                             status_message = Booking.RUNNING
                             booking.set_performer(request.user)
-                            status_message = u"Деньги перешли на счет системы"
+                            status_message = u"Заказ в обработке. Деньги перешли от заказчика на временный системный счет."
                         else:
                             status_message = u"Недостаточно средств"
             except DatabaseError:
@@ -187,7 +187,7 @@ def serve_booking_view(request):
                             customer.profile.decrease_cash(booking.price)
                             customer.profile.save()
                             messages.info(
-                                request, u'Деньги перешли на счет системы')
+                                request, u"Заказ в обработке. Деньги перешли от заказчика на временный системный счет.")
                             booking.set_performer(request.user)
                         else:
                             messages.error(request, u'Недостаточно средств')
@@ -220,8 +220,14 @@ def complete_booking_view(request):
                         if booking_customer != request.user:
                             status_message = u"Это не ваш заказ"
                         else:
-                            status_message = u"Заказ завершен"
-                            booking.complete()
+                            cash_for_system, cash_for_performer = booking.complete()
+                            status_message = \
+                            (u"Заказ завершен. С суммы заказа считана комиссия"
+                       u" в размере %(cash_for_system)g. %(cash_for_performer)g"
+                            u" переведено исполнителю.") % {
+                            'cash_for_system': cash_for_system,
+                            'cash_for_performer': cash_for_performer }
+
             except DatabaseError:
                 # Проблема с generating relationships
                 status_message = u'Внутренняя ошибка'
@@ -241,8 +247,14 @@ def complete_booking_view(request):
                                 u"Не этот пользователь создавал заказ"
                             messages.error(request, status_message)
                         else:
-                            messages.info(request, u'Заказ завершен')
-                            booking.complete()
+                            cash_for_system, cash_for_performer = booking.complete()
+                            status_message = \
+                            (u"Заказ завершен. С суммы заказа считана комиссия"
+                       u" в размере %(cash_for_system)g. %(cash_for_performer)g"
+                            u" переведено исполнителю.") % {
+                            'cash_for_system': cash_for_system,
+                            'cash_for_performer': cash_for_performer }
+                            messages.info(request, status_message)
             except DatabaseError:
                 messages.error(request, u'Внутренняя ошибка')
             return HttpResponseRedirect("/booking/booking_list/")

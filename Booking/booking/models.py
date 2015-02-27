@@ -5,7 +5,7 @@
 """
 
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 
 from decimal import Decimal
 
@@ -92,6 +92,7 @@ class Booking(models.Model):
         self.performer.profile.save()
         self.status = self.COMPLETED
         self.save()
+        return cash_for_system, cash_for_performer
 
     def get_status(self):
         """

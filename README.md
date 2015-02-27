@@ -13,9 +13,8 @@
 У любого заказчика, исполнителя может быть только по одному счету - поле в расширенном профиле модели пользователя. Профиль содержит поле "Счет":
 DecimalField, NOT NULL, default = 100.
 
-###Группы пользователей:
-1. customers - booking.add_booking (создавать заказ).
 ###Две группы пользователей с правами:
+1. customers - booking.add_booking (создавать заказ).
 2. performers - booking.perform_perm (брать заказ на исполнение).  
 
 Тестовые пользователи в админке: user (admin), custuser, perfuser - с соответствующими правами.
@@ -24,7 +23,7 @@ DecimalField, NOT NULL, default = 100.
 System accounts - создать один счет системы, указать текущие денежные средства и комиссию системы.
 Пользователи - создать два тестовых пользоателя custuser, perfuser.
 User profiles	- создать профили для этих двух пользователей, указать их денежные средства.
-Группы - создать две группы customers, performers.
+Группы - создать две группы customers, performers, назначить им права (см. ниже).
 
 Добавить группам права:
 performers - booking | booking | Ability to perform created booking
@@ -35,6 +34,9 @@ customers - booking | booking | Can delete booking
 Добавить пользователям группы:
 custuser - customers
 perfuser - performers
+
+Пояснение:
+В этой версии пользователей и остальные сущности необходимо заводить в админке вручную от администратора.
 
 ###Элементы управления заказами в пользовательском интерфейсе списка заказов:
 - Для исполнителя: исполняет заказ (кнопка в элементе списка в BookingListView).
@@ -97,17 +99,17 @@ CHOICES = [ “pending”, “running”, “completed” ]
 По нажатию кнопки в строке таблицы вызывается AJAX POST request по обработке заказа с последующим изменением его статуса и его отображением на странице.
 
 
-###Для разработки установить:
+###Установка библиотек и остальных компонентов, необходимых для работы:
 
 1. virtualenvwrapper
 https://virtualenvwrapper.readthedocs.org/en/latest/
 
-2. python
+2. pip install python
 
-3. postgresql http://paintincode.blogspot.ru/2012/08/install-postgresql-for-django-and.html
+3. pip install Django
+
+4. postgresql http://paintincode.blogspot.ru/2012/08/install-postgresql-for-django-and.html
 (проверить pg_conf с django https://stackoverflow.com/questions/7695962/postgresql-password-authentication-failed-for-user-postgres)
-
-4. django
 
 5. После разработки развернуть локально.
 
@@ -144,9 +146,10 @@ $    include         uwsgi_params;
 $  }
 $}
 $ cd /home/user/work/Booking/AbstractBooking/Booking
+$ mkdir static_for_deploy
+$ python manage.py collectstatic
 $
 $ uwsgi --socket :3031 --chdir ./ --env DJANGO_SETTINGS_MODULE=Booking.settings --module "django.core.wsgi:get_wsgi_application()"
 $
-$ python manage.py collectstatic
 $ sudo /etc/init.d/nginx reload
 ```

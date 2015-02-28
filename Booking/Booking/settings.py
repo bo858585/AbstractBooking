@@ -68,7 +68,8 @@ BASE_DIR = os.path.dirname(__file__)
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/var/www/example.com/static/"
-STATIC_ROOT = '/home/user/work/Booking/AbstractBooking/Booking/static_for_deploy'
+#STATIC_ROOT = '/home/user/work/Booking/AbstractBooking/Booking/static_for_deploy'
+STATIC_ROOT = os.path.join(os.path.join(BASE_DIR, os.pardir), 'static_for_deploy')
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
@@ -119,7 +120,8 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    '/home/user/work/Booking/AbstractBooking/Booking/Booking/templates',
+    #'/home/user/work/Booking/AbstractBooking/Booking/Booking/templates',
+    (os.path.abspath(os.path.join(BASE_DIR, 'templates'))),
 )
 
 INSTALLED_APPS = (

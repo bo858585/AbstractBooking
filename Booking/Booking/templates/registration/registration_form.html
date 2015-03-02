@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if user.is_anonymous %}
+
+<style>
+    .row {
+        margin: 10px 10px;
+    }
+</style>
+
+<form method="post" action="/accounts/register/" class="form-horizontal">{% csrf_token %}
+  <div class="form-group">
+      <div class="row">
+          {{ form.username.errors }}
+          <div class="col-xs-6 col-sm-4 col-md-3 col-lg-3">
+              <input id="username_id" maxlength="30" name="username" type="text" class="form-control span10" placeholder="Логин"></input>
+          </div>
+      </div>
+      <div class="row">
+          {{ form.email.errors }}
+          <div class="col-xs-6 col-sm-4 col-md-3 col-lg-3">
+            <input id="email_id" name="email" type="email" class="form-control span10" placeholder="Email"></input>
+          </div>
+      </div>
+      <div class="row">
+          {{ form.password1.errors }}
+          <div class="col-xs-6 col-sm-4 col-md-3 col-lg-3">
+            <input id="password1_id" name="password1" type="password" class="form-control span10" placeholder="Пароль"></input>
+          </div>
+      </div>
+      <div class="row">
+          {{ form.password2.errors }}
+          <div class="col-xs-6 col-sm-4 col-md-3 col-lg-3">
+            <input id="password2_id" name="password2" type="password"  class="form-control span10" placeholder="Повторите пароль"></input>
+          </div>
+      </div>
+      <div class="row">
+        {{ form.user_type.errors }}
+        <div class="col-xs-6 col-sm-4 col-md-3 col-lg-3">
+          <select id="user_type_id" name="user_type" class="form-control span10">
+            <option value="customer" selected>Заказчик</option>
+            <option value="performer">Исполнитель</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-6 col-sm-4 col-md-3 col-lg-3">
+          <button type="button submit" class="btn btn-success">
+              Зарегистрироваться
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+{% endif %}
+{% endblock %}

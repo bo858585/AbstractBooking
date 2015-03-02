@@ -31,6 +31,7 @@
   <div id="greeting">
     {% if user.is_anonymous %}
     <a href="{% url 'django.contrib.auth.views.login' %}">Вход</a>
+    <a href="{% url 'registration_register' %}">Регистрация</a>
     {% else %}
     Привет, {{ user }}.
     На вашем счету {{ user.profile.cash }}.

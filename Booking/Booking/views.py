@@ -15,6 +15,9 @@ from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.core.urlresolvers import reverse
 from registration.backends.simple.views import RegistrationView
+from registration.signals import user_registered
+from django.contrib.auth.models import Group
+from booking.models import UserProfile
 
 
 class HomepageView(TemplateView):
@@ -78,5 +81,30 @@ def user_login(request):
 
 # Create a new class that redirects the user to the index page, if successful at logging
 class BookingRegistrationView(RegistrationView):
+    #form_class = BookingRegistrationForm
+
     def get_success_url(self, request, user):
         return reverse('booking-list')
+
+
+def user_registered_callback(sender, user, request, **kwargs):
+    """
+    Сразу после регистрации пользователя по этому сигналу ему назначается группа
+    (customers/performers), для него создается профиль.
+    Сохраняется.
+    """
+    user_type = request.POST["user_type"]
+
+    if user_type == "customer":
+        customers = Group.objects.get(name="customers")
+        # Назначение пользователю группы
+        user.groups.add(customers)
+        user.save()
+        UserProfile.objects.create(user=user, cash=1000.00)
+    else:
+        performers = Group.objects.get(name="performers")
+        user.groups.add(performers)
+        user.save()
+        UserProfile.objects.create(user=user, cash=1000.00)
+
+user_registered.connect(user_registered_callback)

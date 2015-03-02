@@ -131,7 +131,7 @@ $ cp /etc/nginx/sites-available/default /etc/nginx/sites-available/_default
 $ nano /etc/nginx/sites-available/default
 $
 $# Вставить в default конфигурацию ниже:
-
+$# (Пути к проекту заменить на локальные)
 $server {
 $  listen   80;
 $  server_name localhost;

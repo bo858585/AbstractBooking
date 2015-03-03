@@ -4,7 +4,7 @@ from django.test import TestCase
 from booking.models import Booking, SystemAccount, UserProfile
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
-
+from django.core.urlresolvers import reverse
 
 class BookingModelTestCase(TestCase):
 
@@ -139,10 +139,10 @@ class BookingViewsTestCase(TestCase):
         self.assertEqual(user2.groups.all()[0], performers)
 
     def test_calling_view_without_being_logged_in(self):
-        response = self.client.get('/booking/create_booking/', follow=True)
+        response = self.client.get(reverse('create-booking'), follow=True)
         self.assertRedirects(
             response, '/accounts/login/?next=/booking/create_booking/')
-        response = self.client.get('/booking/booking_list/', follow=True)
+        response = self.client.get(reverse('booking-list'), follow=True)
         self.assertRedirects(
             response, '/accounts/login/?next=/booking/booking_list/')
         response = self.client.get('/home/', follow=True)
@@ -166,17 +166,17 @@ class BookingViewsTestCase(TestCase):
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Просмотр списка заказов
-        response = self.client.get('/booking/booking_list/')
+        response = self.client.get(reverse('booking-list'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Просмотр формы создания заказа
-        response = self.client.get('/booking/create_booking/')
+        response = self.client.get(reverse('create-booking'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_form.html')
 
         # Создание заказа
-        response = self.client.post('/booking/create_booking/',
+        response = self.client.post(reverse('create-booking'),
                                     {'title': 'test_title1',
                                         'text': 'test_text1', 'price': '12.00'},
                                     follow=True)
@@ -209,12 +209,12 @@ class BookingViewsTestCase(TestCase):
         user2 = User.objects.get(username='johndow')
 
         # Просмотр списка заказов
-        response = self.client.get('/booking/booking_list/')
+        response = self.client.get(reverse('booking-list'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Взятие заказа на исполнение
-        response = self.client.post('/booking/serve/',
+        response = self.client.post(reverse('serve-booking'),
                                     {'booking': booking.id}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
@@ -240,7 +240,7 @@ class BookingViewsTestCase(TestCase):
         user = User.objects.get(username='john')
 
         # Закрытие заказа
-        response = self.client.post('/booking/complete/',
+        response = self.client.post(reverse('complete-booking'),
                                     {'booking': booking.id}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
@@ -281,17 +281,17 @@ class BookingViewsTestCase(TestCase):
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Просмотр списка заказов
-        response = self.client.get('/booking/booking_list/')
+        response = self.client.get(reverse('booking-list'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Просмотр формы создания заказа
-        response = self.client.get('/booking/create_booking/')
+        response = self.client.get(reverse('create-booking'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_form.html')
 
         # Создание заказа
-        response = self.client.post('/booking/create_booking/',
+        response = self.client.post(reverse('create-booking'),
                                     {'title': 'test_title1',
                                         'text': 'test_text1', 'price': '12.00'},
                                     follow=True)
@@ -324,12 +324,12 @@ class BookingViewsTestCase(TestCase):
         user2 = User.objects.get(username='johndow')
 
         # Просмотр списка заказов
-        response = self.client.get('/booking/booking_list/')
+        response = self.client.get(reverse('booking-list'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Взятие заказа на исполнение
-        response = self.client.post('/booking/serve/',
+        response = self.client.post(reverse('serve-booking'),
                                     {'booking': booking.id}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
@@ -353,7 +353,7 @@ class BookingViewsTestCase(TestCase):
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Закрытие заказа
-        response = self.client.post('/booking/complete/',
+        response = self.client.post(reverse('complete-booking'),
                                     {'booking': booking.id}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
@@ -394,17 +394,17 @@ class BookingViewsTestCase(TestCase):
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Просмотр списка заказов
-        response = self.client.get('/booking/booking_list/')
+        response = self.client.get(reverse('booking-list'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Просмотр формы создания заказа
-        response = self.client.get('/booking/create_booking/')
+        response = self.client.get(reverse('create-booking'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_form.html')
 
         # Создание заказа
-        response = self.client.post('/booking/create_booking/',
+        response = self.client.post(reverse('create-booking'),
                                     {'title': 'test_title1',
                                         'text': 'test_text1', 'price': '12.00'},
                                     follow=True)
@@ -437,7 +437,7 @@ class BookingViewsTestCase(TestCase):
         #user3 = User.objects.get(username='johnthird')
 
         # Просмотр списка заказов
-        response = self.client.get('/booking/booking_list/')
+        response = self.client.get(reverse('booking-list'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 

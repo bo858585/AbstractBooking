@@ -9,7 +9,7 @@
 </style>
 
 <h1>Сделать заказ</h1>
-<form role="form" action="/booking/create_booking/" method="post">{% csrf_token %}
+<form role="form" action="{% url 'create-booking' %}" method="post">{% csrf_token %}
   <div class="form-group">
       {{ form.title.errors }}
       <input type="text" name="title" id="title_id" class="form-control span10" placeholder="Название" maxlength="100"/>

@@ -1,4 +1,4 @@
-<form action="/booking/serve/" method="post">{% csrf_token %}
+<form action="{% url 'serve-booking' %}" method="post">{% csrf_token %}
   <input type="hidden" value="{{val.id}}" name="booking" id="booking_id"/>
   <button type="button submit" class="btn btn-success serve">
     Взять

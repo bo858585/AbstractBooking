@@ -10,7 +10,7 @@
     }
 </style>
 
-<form method="post" action="/accounts/register/" class="form-horizontal">{% csrf_token %}
+<form method="post" action="{% url 'registration_register' %}" class="form-horizontal">{% csrf_token %}
   <div class="form-group">
       <div class="row">
           {{ form.username.errors }}

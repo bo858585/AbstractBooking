@@ -442,7 +442,7 @@ class BookingViewsTestCase(TestCase):
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Взятие заказа на исполнение
-        response = self.client.post('/booking/serve/',
+        response = self.client.post(reverse('serve-booking'),
                                     {'booking': booking.id}, follow=True)
         self.assertEqual(response.status_code, 200)
         # Перенаправление на страницу логина означает отсутствие прав на view
@@ -450,7 +450,8 @@ class BookingViewsTestCase(TestCase):
 
 
         # Попытка удаления заказа - удалить может только создававший
-        response = self.client.post('/booking/delete_booking/' + str(booking.pk) + '/',
+        response = self.client.post(reverse('delete-booking',
+                             kwargs={'pk': booking.id }),
                              follow=True)
         self.assertEqual(response.status_code, 404)
 
@@ -469,7 +470,8 @@ class BookingViewsTestCase(TestCase):
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Должен смочь удалить заказ
-        response = self.client.post('/booking/delete_booking/' + str(booking.pk) + '/',
+        response = self.client.post(reverse('delete-booking',
+                             kwargs={'pk': booking.id}),
                              follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
@@ -493,12 +495,12 @@ class BookingViewsTestCase(TestCase):
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Просмотр списка заказов
-        response = self.client.get('/booking/booking_list/')
+        response = self.client.get(reverse('booking-list'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Просмотр формы создания заказа
-        response = self.client.get('/booking/create_booking/')
+        response = self.client.get(reverse('create-booking'))
         self.assertEqual(response.status_code, 403)
 
     def test_create_customer_and_performer_create_booking_serve_and_check_own_page(self):
@@ -518,17 +520,17 @@ class BookingViewsTestCase(TestCase):
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Просмотр списка заказов
-        response = self.client.get('/booking/own_booking_list/')
+        response = self.client.get(reverse('own-booking-list'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Просмотр формы создания заказа
-        response = self.client.get('/booking/create_booking/')
+        response = self.client.get(reverse('create-booking'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_form.html')
 
         # Создание заказа
-        response = self.client.post('/booking/create_booking/',
+        response = self.client.post(reverse('create-booking'),
                                     {'title': 'test_title1',
                                         'text': 'test_text1', 'price': '12.00'},
                                     follow=True)
@@ -561,12 +563,12 @@ class BookingViewsTestCase(TestCase):
         user2 = User.objects.get(username='johndow')
 
         # Просмотр списка заказов
-        response = self.client.get('/booking/own_booking_list/')
+        response = self.client.get(reverse('own-booking-list'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Взятие заказа на исполнение
-        response = self.client.post('/booking/serve/',
+        response = self.client.post(reverse('serve-booking'),
                                     {'booking': booking.id}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
@@ -581,7 +583,8 @@ class BookingViewsTestCase(TestCase):
 
         # Попытка удаления заказа - заказчик не должен смочь удалить взятый на
         # исполнение заказ
-        response = self.client.post('/booking/delete_booking/' + str(booking.pk) + '/',
+        response = self.client.post(reverse('delete-booking',
+                             kwargs={'pk': booking.id}),
                              follow=True)
         self.assertEqual(response.status_code, 404)
 
@@ -603,7 +606,7 @@ class BookingViewsTestCase(TestCase):
         user = User.objects.get(username='john')
 
         # Закрытие заказа
-        response = self.client.post('/booking/complete/',
+        response = self.client.post(reverse('complete-booking'),
                                     {'booking': booking.id}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
@@ -617,7 +620,8 @@ class BookingViewsTestCase(TestCase):
         self.assertEqual(user2.profile.cash, booking.price * (1 - comission))
 
         # Удаление заказа
-        response = self.client.post('/booking/delete_booking/' + str(booking.pk) + '/',
+        response = self.client.post(reverse('delete-booking',
+                             kwargs={'pk': booking.id}),
                              follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')

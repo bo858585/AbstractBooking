@@ -87,7 +87,7 @@ tr th#actions { width: 8%; }
           <td>
               {% if booking.0.customer == user %}
                   {% if booking.0.status != "running" %}
-                      <form method="POST" action="/booking/delete_booking/{{booking.0.pk}}/">
+                      <form method="POST" action="{% url 'delete-booking' booking.0.pk %}"/>
                           {% csrf_token %}<input type="submit" value="Удалить">
                       </form>
                   {% endif %}

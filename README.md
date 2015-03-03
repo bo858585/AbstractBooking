@@ -110,6 +110,8 @@ DecimalField, NOT NULL, default = 100.
 1. virtualenvwrapper
 https://virtualenvwrapper.readthedocs.org/en/latest/
 
+mkvirtualenv booking
+
 2. pip install python
 
 3. pip install Django

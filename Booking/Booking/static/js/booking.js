@@ -12,7 +12,8 @@ $(document).ready(function () {
 
     var value = $(this).prev().val(),
     csrfmiddlewaretoken = $(this).prev().prev().val(),
-    url_part = "";
+    url_part = "",
+    that = $(this);
 
     if ($(this).hasClass('serve')) {
       url_part = "serve/";
@@ -30,6 +31,11 @@ $(document).ready(function () {
       success: function (msg) {
         $("div.alert").remove();
         $("div#greeting").after('<div class="alert alert-info">' + msg.request_status + '</div>');
+        if (msg.request_status.substr(0, 15) === "Заказ завершен.") {
+            that.closest('tr').html('');
+        } else {
+            that.closest('form').html('');
+        }
         return false;
       },
       error: function (jqXHR, textStatus, errorThrown) {

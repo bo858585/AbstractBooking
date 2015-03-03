@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import permission_required
 from django.views.generic.list import ListView
+from django.views.generic.edit import DeleteView
 from django.http import HttpResponse
 from django.db import transaction
 from django.contrib import messages
@@ -17,6 +18,8 @@ from django.db import DatabaseError
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import user_passes_test
 from django.db.models import Q
+from django.core.urlresolvers import reverse_lazy
+from django.http import Http404
 
 from .models import Booking
 from .forms import BookingForm
@@ -325,3 +328,24 @@ class OwnBookingListView(LoginRequiredMixin, ListView):
         context['bookings'] = zip(context['object_list'], permissions_list)
 
         return context
+
+
+class DeleteBookingView(LoginRequiredMixin, DeleteView):
+    """
+    Удаление заказа
+    """
+
+    model = Booking
+    success_url = reverse_lazy('booking-list')
+
+    def get_object(self, queryset=None):
+        """ Заказ создавался request.user. """
+        booking = super(DeleteBookingView, self).get_object()
+        if booking.customer != self.request.user:
+            raise Http404
+        # Если заказ выполняется, удалять его нельзя
+        status = booking.get_status()
+        if status == Booking.RUNNING:
+            raise Http404
+
+        return booking

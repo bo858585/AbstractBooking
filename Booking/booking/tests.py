@@ -448,6 +448,36 @@ class BookingViewsTestCase(TestCase):
         # Перенаправление на страницу логина означает отсутствие прав на view
         self.assertTemplateUsed(response, 'registration/login.html')
 
+
+        # Попытка удаления заказа - удалить может только создававший
+        response = self.client.post('/booking/delete_booking/' + str(booking.pk) + '/',
+                             follow=True)
+        self.assertEqual(response.status_code, 404)
+
+        bookings = Booking.objects.all()
+        self.assertEqual(len(bookings), 1)
+
+        # Выход
+        response = self.client.post('/accounts/logout/', follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/logged_out.html')
+
+        # Вход из-под первого заказчика
+        response = self.client.post('/accounts/login/',
+                                    {'username': 'john', 'password': 'johnpassword'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Должен смочь удалить заказ
+        response = self.client.post('/booking/delete_booking/' + str(booking.pk) + '/',
+                             follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        bookings = Booking.objects.all()
+        self.assertEqual(len(bookings), 0)
+
+
     def test_performer_and_can_not_create_booking(self):
         """
         Создать пользователя - исполнитель.
@@ -548,6 +578,17 @@ class BookingViewsTestCase(TestCase):
 
         self.assertEqual(user1.profile.cash + booking.price, user1_cash_before)
 
+
+        # Попытка удаления заказа - заказчик не должен смочь удалить взятый на
+        # исполнение заказ
+        response = self.client.post('/booking/delete_booking/' + str(booking.pk) + '/',
+                             follow=True)
+        self.assertEqual(response.status_code, 404)
+
+        bookings = Booking.objects.all()
+        self.assertEqual(len(bookings), 1)
+
+
         # Выход
         response = self.client.post('/accounts/logout/', follow=True)
         self.assertEqual(response.status_code, 200)
@@ -567,10 +608,19 @@ class BookingViewsTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
-        # Взят на исполнение
+        # Завершен
         booking = Booking.objects.all()[0]
         self.assertEqual(booking.get_status(), Booking.COMPLETED)
         system_account = SystemAccount.objects.all()[0]
         comission = system_account.get_comission()
         self.assertEqual(system_account.account, booking.price * comission)
         self.assertEqual(user2.profile.cash, booking.price * (1 - comission))
+
+        # Удаление заказа
+        response = self.client.post('/booking/delete_booking/' + str(booking.pk) + '/',
+                             follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        bookings = Booking.objects.all()
+        self.assertEqual(len(bookings), 0)

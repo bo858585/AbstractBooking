@@ -94,8 +94,11 @@ DecimalField, NOT NULL, default = 100.
 4. ######При нажатии на кнопку “Завершить заказ”:
 Сумма заказа в ленте в зависимости от комиссии (целое число от 0 до 100 процентов, указывается в админке в соответсвующей модели (уточнить)) делится на две части - на счет исполнителя заказа и системы поступают две эти части суммы. Заказу назначается статус “Завершен”. Заказчику выводятся сообщения с указанием этих сумм. Страница обновляется. Заказ исчезает из ленты как выполнившийся.
 
-4. ######Список заказов, связанных с пользователем:
+5. ######Список заказов, связанных с пользователем:
 Страница, в которой отображается список заказов самого пользователя - заказы, в которых он является заказчиком или исполнителем. Этот список полностью аналогичен списку всех заказов системы за тем исключением, что в нем отображаются и завершенные заказы (сделано, чтобы пользователь видел историю своих заказов).
+
+6. ######Кнопка удаления заказа:
+Заказчик может удалить свой заказ, если статус заказа не RUNNING (заказ не обрабатывается в данный момент).
 
 ###Обработка нажатия кнопок в последнем столбце таблицы при включенном ajax:
 По нажатию кнопки в строке таблицы вызывается AJAX POST request по обработке заказа с последующим изменением его статуса и его отображением на странице.
@@ -140,25 +143,24 @@ $
 $# Вставить в default конфигурацию ниже:
 $# (Пути к проекту заменить на локальные)
 $server {
-  $  listen   80;
-  $  server_name localhost;
-  $  
-  $  location /static/  {
-    $    alias /home/user/work/Booking/AbstractBooking/Booking/static_for_deploy/;
-    $  }
-    $  
-    $  location / {
-      $    root            /home/user/work/Booking/AbstractBooking/Booking/Booking;
-      $    uwsgi_pass      127.0.0.1:3031;
-      $    include         uwsgi_params;
-      $  }
-      $}
-      $ cd /home/user/work/Booking/AbstractBooking/Booking
-      $ mkdir static_for_deploy
-      $ python manage.py collectstatic
-      $
-      $ uwsgi --socket :3031 --chdir ./ --env DJANGO_SETTINGS_MODULE=Booking.settings --module "django.core.wsgi:get_wsgi_application()"
-      $
-      $ sudo /etc/init.d/nginx reload
-      ```
-      
+$  listen   80;
+$  server_name localhost;
+$  
+$  location /static/  {
+$    alias /home/user/work/Booking/AbstractBooking/Booking/static_for_deploy/;
+$  }
+$  
+$  location / {
+$    root            /home/user/work/Booking/AbstractBooking/Booking/Booking;
+$    uwsgi_pass      127.0.0.1:3031;
+$    include         uwsgi_params;
+$  }
+$}
+$ cd /home/user/work/Booking/AbstractBooking/Booking
+$ mkdir static_for_deploy
+$ python manage.py collectstatic
+$
+$ uwsgi --socket :3031 --chdir ./ --env DJANGO_SETTINGS_MODULE=Booking.settings --module "django.core.wsgi:get_wsgi_application()"
+$
+$ sudo /etc/init.d/nginx reload
+```

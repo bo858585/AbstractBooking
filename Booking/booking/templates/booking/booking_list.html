@@ -4,6 +4,8 @@
 
 {% if user.is_authenticated %}
 
+{% if bookings %}
+
 <style>
 table {
     table-layout: fixed;
@@ -23,8 +25,9 @@ tr th#actions { width: 8%; }
 
 </style>
 <h1>Список заказов</h1>
-
+{% load has_group %}
 <div class=".table-striped">
+
 <table class="table" id="booking_list">
   <thead>
     <tr>
@@ -36,6 +39,9 @@ tr th#actions { width: 8%; }
       <th id="performer">Исполнитель</th>
       <th id="date">Дата создания</th>
       <th id="actions">Ваши действия</th>
+      {% if user|has_group:"customers" %}
+          <th id="actions">Удалить заказ</th>
+      {% endif %}
     </tr>
   </thead>
   <tbody>
@@ -77,6 +83,17 @@ tr th#actions { width: 8%; }
               {% include "booking/complete.html" with val=booking.0 %}
           {% endif %}
       </td>
+      {% if user|has_group:"customers" %}
+          <td>
+              {% if booking.0.customer == user %}
+                  {% if booking.0.status != "running" %}
+                      <form method="POST" action="/booking/delete_booking/{{booking.0.pk}}/">
+                          {% csrf_token %}<input type="submit" value="Удалить">
+                      </form>
+                  {% endif %}
+              {% endif %}
+          </td>
+      {% endif %}
     </tr>
     {% endfor %}
   </tbody>
@@ -97,6 +114,8 @@ tr th#actions { width: 8%; }
     {% endif %}
   </span>
 </div>
+{% endif %}
+
 {% endif %}
 
 {% endif %}

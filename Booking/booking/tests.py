@@ -470,3 +470,107 @@ class BookingViewsTestCase(TestCase):
         # Просмотр формы создания заказа
         response = self.client.get('/booking/create_booking/')
         self.assertEqual(response.status_code, 403)
+
+    def test_create_customer_and_performer_create_booking_serve_and_check_own_page(self):
+        """
+        Заказчик создает заказ.
+        Другой берет его на выполнение.
+        Первый завершает заказ.
+        """
+
+        user1 = User.objects.get(username='john')
+        user1_cash_before = user1.profile.cash
+
+        # Вход
+        response = self.client.post('/accounts/login/',
+                                    {'username': 'john', 'password': 'johnpassword'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Просмотр списка заказов
+        response = self.client.get('/booking/own_booking_list/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Просмотр формы создания заказа
+        response = self.client.get('/booking/create_booking/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_form.html')
+
+        # Создание заказа
+        response = self.client.post('/booking/create_booking/',
+                                    {'title': 'test_title1',
+                                        'text': 'test_text1', 'price': '12.00'},
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Проверка того, что заказ в базе после создания
+        self.assertEqual(len(Booking.objects.all()), 1)
+        booking = Booking.objects.all()[0]
+
+        user1 = User.objects.get(username='john')
+
+        self.assertEqual(booking.get_customer(), user1)
+        self.assertEqual(booking.title, 'test_title1')
+        self.assertEqual(booking.text, 'test_text1')
+        self.assertEqual(booking.price, 12.0)
+        self.assertEqual(booking.status, Booking.PENDING)
+
+        # Выход
+        response = self.client.post('/accounts/logout/', follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/logged_out.html')
+
+        # Вход из-под исполнителя
+        response = self.client.post('/accounts/login/',
+                                    {'username': 'johndow', 'password': 'dowpassword'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        user2 = User.objects.get(username='johndow')
+
+        # Просмотр списка заказов
+        response = self.client.get('/booking/own_booking_list/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Взятие заказа на исполнение
+        response = self.client.post('/booking/serve/',
+                                    {'booking': booking.id}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Взят на исполнение
+        booking = Booking.objects.all()[0]
+        self.assertEqual(booking.get_performer(), user2)
+        self.assertEqual(booking.get_status(), Booking.RUNNING)
+
+        self.assertEqual(user1.profile.cash + booking.price, user1_cash_before)
+
+        # Выход
+        response = self.client.post('/accounts/logout/', follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/logged_out.html')
+
+        # Вход из-под заказчика
+        response = self.client.post('/accounts/login/',
+                                    {'username': 'john', 'password': 'johnpassword'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        user = User.objects.get(username='john')
+
+        # Закрытие заказа
+        response = self.client.post('/booking/complete/',
+                                    {'booking': booking.id}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Взят на исполнение
+        booking = Booking.objects.all()[0]
+        self.assertEqual(booking.get_status(), Booking.COMPLETED)
+        system_account = SystemAccount.objects.all()[0]
+        comission = system_account.get_comission()
+        self.assertEqual(system_account.account, booking.price * comission)
+        self.assertEqual(user2.profile.cash, booking.price * (1 - comission))

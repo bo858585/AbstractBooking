@@ -16,6 +16,7 @@ from django.contrib import messages
 from django.db import DatabaseError
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import user_passes_test
+from django.db.models import Q
 
 from .models import Booking
 from .forms import BookingForm
@@ -260,3 +261,67 @@ def complete_booking_view(request):
             return HttpResponseRedirect("/booking/booking_list/")
 
     return HttpResponse("")
+
+
+class OwnBookingListView(LoginRequiredMixin, ListView):
+    """
+    Список заказов самого пользователя
+    """
+    CAN_COMPLETE = "can_complete"
+    CAN_TAKE = "can_take"
+    CAN_VIEW = "can_view"
+    # Кнопка взятия заказа неактивна
+    NOT_ACTIVE = "not_active"
+
+    model = Booking
+    paginate_by = 20
+    template_name = 'booking/booking_list.html'
+
+    def get_queryset(self):
+        queryset = Booking.objects.filter(
+            Q(customer=self.request.user) | Q(performer=self.request.user)
+        ).order_by('-date')
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super(OwnBookingListView, self).get_context_data(**kwargs)
+        permissions_list = []
+        user = self.request.user
+
+        for o in context['object_list']:
+            # Заказ ждет выполнения
+            if o.status == Booking.PENDING:
+                if not user.has_perm("booking.add_booking"):
+                    # Тип пользователя - исполнитель.
+                    if o.customer.profile.has_enough_cash_for_booking(o.price):
+                        # Такие пользователи могут брать заказы на выполнение,
+                        # если у заказчика достаточно средств
+                        permissions_list.append(self.CAN_TAKE)
+                    else:
+                        # Иначе - кнопка взятия заказа неактивна
+                        permissions_list.append(self.NOT_ACTIVE)
+                else:
+                    if o.customer.profile.has_enough_cash_for_booking(o.price):
+                        # Остальные могут просматривать
+                        permissions_list.append(self.CAN_VIEW)
+                    else:
+                        # Иначе - кнопка взятия заказа неактивна
+                        permissions_list.append(self.NOT_ACTIVE)
+            else:
+                # Заказ кем-то исполняется
+                if o.status == Booking.RUNNING:
+                    # Текущий пользователь создавал этот заказ.
+                    if o.customer == user:
+                        # Такой пользователь может завершать заказ.
+                        permissions_list.append(self.CAN_COMPLETE)
+                    else:
+                        # Иначе - только просматривать
+                        permissions_list.append(self.CAN_VIEW)
+                else:
+                    if o.status == Booking.COMPLETED:
+                        # Если заказ завершен, его можно только просматривать.
+                        permissions_list.append(self.CAN_VIEW)
+
+        context['bookings'] = zip(context['object_list'], permissions_list)
+
+        return context

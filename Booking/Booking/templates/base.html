@@ -47,10 +47,11 @@
   {% if user.is_authenticated %}
   {% load has_group %}
   <ol class="breadcrumb" class="active">
-    <li><a href="{% url 'booking-list' %}">Список заказов</a></li>
+    <li><a href="{% url 'booking-list' %}">Список всех заказов</a></li>
     {% if user|has_group:"customers" %}
     <li><a href="{% url 'create-booking' %}">Сделать заказ</a></li>
     {% endif %}
+    <li><a href="{% url 'own-booking-list' %}">Список заказов, связанных с Вами</a></li>
   </ol>
   {% endif %}
   {% block content %}

@@ -27,11 +27,13 @@ class Booking(models.Model):
         )
 
     PENDING = "pending"
+    WAITING_FOR_APPROVAL = "waiting_for_approval"
     RUNNING = "running"
     COMPLETED = "completed"
 
     STATUS_CHOICES = (
         (PENDING, u"Ожидает исполнителя"),
+        (WAITING_FOR_APPROVAL, u"Ожидает подтверждения заказчиком"),
         (RUNNING, u"Взят на исполнение"),
         (COMPLETED, u"Завершен"),
     )
@@ -55,7 +57,6 @@ class Booking(models.Model):
         для заказа.
         """
         self.performer = performer
-        self.status = self.RUNNING
         self.save()
 
     def set_customer(self, customer):
@@ -99,6 +100,13 @@ class Booking(models.Model):
         Получение текущего статуса заказа
         """
         return self.status
+
+    def set_status(self, status):
+        """
+        Установка статуса для заказа.
+        """
+        self.status = status
+        self.save()
 
 
 class UserProfile(models.Model):

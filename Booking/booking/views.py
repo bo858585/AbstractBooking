@@ -20,6 +20,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.db.models import Q
 from django.core.urlresolvers import reverse_lazy
 from django.http import Http404
+from django.views.generic.edit import FormView
 
 from .models import Booking
 from .forms import BookingForm
@@ -52,6 +53,8 @@ class BookingCreate(LoginRequiredMixin, CreateView):
 class BookingListView(LoginRequiredMixin, ListView):
 
     """
+    Список всех заказов.
+
     В начале на заказе есть кнопка “Взять заказ”, которая отображается только
     исполнителям.
     Завершенные заказы не отображаются.
@@ -73,11 +76,16 @@ class BookingListView(LoginRequiredMixin, ListView):
     queryset = Booking.objects.exclude(
         status__exact=Booking.COMPLETED).order_by('-date')
 
+    # Заказчик может завершить заказ
     CAN_COMPLETE = "can_complete"
+    # Исполнитель может взять заказ
     CAN_TAKE = "can_take"
+    # Возможность смотреть заказ
     CAN_VIEW = "can_view"
     # Кнопка взятия заказа неактивна
     NOT_ACTIVE = "not_active"
+    # Заказчик может подтверждать/отклонять заказ
+    CAN_APPROVE = "can_approve"
 
     def get_context_data(self, **kwargs):
         context = super(BookingListView, self).get_context_data(**kwargs)
@@ -117,6 +125,20 @@ class BookingListView(LoginRequiredMixin, ListView):
                     if o.status == Booking.COMPLETED:
                         # Если заказ завершен, его можно только просматривать.
                         permissions_list.append(self.CAN_VIEW)
+                    else:
+                        if o.status == Booking.WAITING_FOR_APPROVAL:
+                            # Заказ ждет подтверждения заказчиком после попытки
+                            # исполнителя его взять
+                            if not user.has_perm("booking.add_booking"):
+                                # Для исполнителя кнопка заказа неактивна
+                                permissions_list.append(self.NOT_ACTIVE)
+                            else:
+                                # Заказчик может подтрверждать/отклонять,
+                                # если создавал этот заказ
+                                if o.customer == user:
+                                    permissions_list.append(self.CAN_APPROVE)
+                                else:
+                                    permissions_list.append(self.CAN_VIEW)
 
         context['bookings'] = zip(context['object_list'], permissions_list)
 
@@ -127,15 +149,13 @@ class BookingListView(LoginRequiredMixin, ListView):
 @user_passes_test(lambda u: u.has_perm('booking.perform_perm'))
 def serve_booking_view(request):
     """
+    Исполнитель пытается взять заказ.
+
     При клике исполнителя (performer) на кнопку “Взять заказ” производится
     проверка, хватит ли заказчику этого заказа (customer) денег на оплату
-    заказа. Если хватит, со счета заказчика списывается цена заказа. Заказу
-    назначается статус “Выполняется”. Заказ сохраняется. Эти операции - в одной
-    транзакции. (это значит, что системе в ленту заказов - виртульно, согласно
-    статусу заказа - перешли деньги со счета заказчика, то есть система
-    выступает посредником между заказчиком и исполнителем). Страница
-    обновляется. Кнопка “Взять заказ” на заказе исчезает, появляется кнопка
-    “Завершить заказ”, доступная только заказчику, сделавшему этот заказ.
+    заказа. Если хватит, заказу назначается статус “Ожидает подтверждения”.
+    Заказ сохраняется. Страница обновляется. Кнопка “Взять заказ”
+    на заказе исчезает.
     """
     if request.method == "POST":
         if request.is_ajax():
@@ -161,12 +181,10 @@ def serve_booking_view(request):
                                 content_type="application/json")
                         # Проверка средств на счету пользователя.
                         if is_enough_cash:
-                            # Их вычет со счета. И назначение заказу исполнителя
-                            customer.profile.decrease_cash(booking.price)
-                            customer.profile.save()
-                            status_message = Booking.RUNNING
                             booking.set_performer(request.user)
-                            status_message = u"Заказ в обработке. Деньги перешли от заказчика на временный системный счет."
+                            booking.set_status(Booking.WAITING_FOR_APPROVAL)
+                            status_message =\
+                             u"Заявка на выполнение ожидает подтверждения заказчиком."
                         else:
                             status_message = u"Недостаточно средств"
             except DatabaseError:
@@ -188,13 +206,174 @@ def serve_booking_view(request):
                                 booking.price
                             )
                         if is_enough_cash:
+                            messages.info(
+                                request, u"Заявка на выполнение ожидает подтверждения заказчиком.")
+                            booking.set_performer(request.user)
+                            booking.set_status(Booking.WAITING_FOR_APPROVAL)
+                        else:
+                            messages.error(request, u'Недостаточно средств')
+            except DatabaseError:
+                messages.error(request, u'Внутренняя ошибка')
+            return HttpResponseRedirect("/booking/booking_list/")
+    return HttpResponse("")
+
+
+@login_required
+@user_passes_test(lambda u: u.has_perm('booking.add_booking'))
+def approve_performer_view(request):
+    """
+    Заказчик подтверждает исполнителю взятие заказа. Деньги переводятся на счет
+    системы.
+
+    При клике заказчика на кнопку “Подтвердить заказ” производится
+    проверка, хватит ли заказчику этого заказа (customer) денег на оплату
+    заказа. Если хватит, со счета заказчика списывается цена заказа. Заказу
+    назначается статус “Выполняется”. Заказ сохраняется. Эти операции - в одной
+    транзакции. (это значит, что системе в ленту заказов - виртуально, согласно
+    статусу заказа - перешли деньги со счета заказчика, то есть система
+    выступает посредником между заказчиком и исполнителем). Страница
+    обновляется. Кнопки “Подтвердить/Отклонить заказ” на заказе исчезают, появляется кнопка
+    “Завершить заказ”, доступная только заказчику, сделавшему этот заказ.
+    """
+    if request.method == "POST":
+        if request.is_ajax():
+            try:
+                with transaction.atomic():
+                    booking = Booking.objects.get(id=request.POST['booking_id'])
+
+                    # Проверка того, что текущий пользователь создавал заказ
+                    customer = booking.get_customer()
+                    if request.user != customer:
+                        status_message = u"Это не Ваш заказ"
+                        return HttpResponse(json.dumps({'request_status':
+                            status_message}),
+                            content_type="application/json")
+
+                    # Проверка текущего статуса заказа
+                    booking_status = booking.get_status()
+                    if booking_status != Booking.WAITING_FOR_APPROVAL:
+                        status_message = u"Неверный статус заказа"
+                    else:
+                        try:
+                            is_enough_cash = \
+                                customer.profile.has_enough_cash_for_booking(
+                                    booking.price
+                                )
+                        except ObjectDoesNotExist:
+                            status_message = \
+                                u'У создателя заказа нет расширенного профиля'
+                            return HttpResponse(json.dumps({'request_status':
+                                status_message}),
+                                content_type="application/json")
+                        # Проверка средств на счету пользователя.
+                        if is_enough_cash:
+                            # Их вычет со счета. И назначение заказу исполнителя
+                            customer.profile.decrease_cash(booking.price)
+                            customer.profile.save()
+                            booking.set_status(Booking.RUNNING)
+                            status_message = u"Заказ в обработке. Деньги перешли от заказчика на временный системный счет."
+                        else:
+                            status_message = u"Недостаточно средств"
+            except DatabaseError:
+                # Проблема с generating relationships
+                status_message = u'Внутренняя ошибка'
+            return HttpResponse(json.dumps({'request_status': status_message}),
+                                content_type="application/json")
+        else:
+            try:
+                with transaction.atomic():
+                    booking = Booking.objects.get(id=request.POST['booking'])
+
+                    # Проверка того, что текущий пользователь создавал заказ
+                    customer = booking.get_customer()
+                    if request.user != customer:
+                        messages.error(request, u'Это не Ваш заказ')
+                        return HttpResponseRedirect("/booking/booking_list/")
+
+                    booking_status = booking.get_status()
+                    if booking_status != Booking.WAITING_FOR_APPROVAL:
+                        messages.error(request, u'Неверный статус заказа')
+                    else:
+                        customer = booking.get_customer()
+                        is_enough_cash = \
+                            customer.profile.has_enough_cash_for_booking(
+                                booking.price
+                            )
+                        if is_enough_cash:
                             customer.profile.decrease_cash(booking.price)
                             customer.profile.save()
                             messages.info(
                                 request, u"Заказ в обработке. Деньги перешли от заказчика на временный системный счет.")
-                            booking.set_performer(request.user)
+                            booking.set_status(Booking.RUNNING)
                         else:
                             messages.error(request, u'Недостаточно средств')
+            except DatabaseError:
+                messages.error(request, u'Внутренняя ошибка')
+            return HttpResponseRedirect("/booking/booking_list/")
+    return HttpResponse("")
+
+
+@login_required
+@user_passes_test(lambda u: u.has_perm('booking.add_booking'))
+def reject_performer_view(request):
+    """
+    Заказчик отклоняет попытку исполнителя взять его заказ.
+
+    При клике заказчика на кнопку “Подтвердить заказ” производится
+    проверка, хватит ли заказчику этого заказа (customer) денег на оплату
+    заказа. Если хватит, со счета заказчика списывается цена заказа. Заказу
+    назначается статус “Выполняется”. Заказ сохраняется. Эти операции - в одной
+    транзакции. (это значит, что системе в ленту заказов - виртульно, согласно
+    статусу заказа - перешли деньги со счета заказчика, то есть система
+    выступает посредником между заказчиком и исполнителем). Страница
+    обновляется. Кнопки “Подтвердить/Отклонить заказ” на заказе исчезают, появляется кнопка
+    “Завершить заказ”, доступная только заказчику, сделавшему этот заказ.
+    """
+    if request.method == "POST":
+        if request.is_ajax():
+            try:
+                with transaction.atomic():
+                    # Проверка текущего статуса заказа
+                    booking = Booking.objects.get(id=request.POST['booking_id'])
+
+                    # Проверка того, что текущий пользователь создавал заказ
+                    customer = booking.get_customer()
+                    if request.user != customer:
+                        status_message = u"Это не Ваш заказ"
+                        return HttpResponse(json.dumps({'request_status':
+                            status_message}),
+                        content_type="application/json")
+
+                    booking_status = booking.get_status()
+                    if booking_status != Booking.WAITING_FOR_APPROVAL:
+                        status_message = u"Неверный статус заказа"
+                    else:
+                        booking.set_performer(None)
+                        booking.set_status(Booking.PENDING)
+                        status_message = u"Заказ ожидает выполнения."
+            except DatabaseError:
+                # Проблема с generating relationships
+                status_message = u'Внутренняя ошибка'
+            return HttpResponse(json.dumps({'request_status': status_message}),
+                                content_type="application/json")
+        else:
+            try:
+                with transaction.atomic():
+                    booking = Booking.objects.get(id=request.POST['booking'])
+
+                    # Проверка того, что текущий пользователь создавал заказ
+                    customer = booking.get_customer()
+                    if request.user != customer:
+                        messages.error(request, u'Это не Ваш заказ')
+                        return HttpResponseRedirect("/booking/booking_list/")
+
+                    booking_status = booking.get_status()
+                    if booking_status != Booking.WAITING_FOR_APPROVAL:
+                        messages.error(request, u'Неверный статус заказа')
+                    else:
+                        booking.set_performer(None)
+                        booking.set_status(Booking.PENDING)
+                        status_message = u"Заказ ожидает выполнения."
             except DatabaseError:
                 messages.error(request, u'Внутренняя ошибка')
             return HttpResponseRedirect("/booking/booking_list/")
@@ -205,6 +384,9 @@ def serve_booking_view(request):
 @permission_required('booking.add_booking', raise_exception=True)
 def complete_booking_view(request):
     """
+    Перевод средств со счета системы на счет исполнителя заказчиком и
+    завершение заказа.
+
     При нажатии на кнопку “Завершить заказ” сумма заказа в ленте в зависимости
     от комиссии (целое число от 0 до 100 процентов, указывается в админке)
     делится на две части - на счет исполнителя заказа и системы поступают две
@@ -338,6 +520,10 @@ class DeleteBookingView(LoginRequiredMixin, DeleteView):
     model = Booking
     success_url = reverse_lazy('booking-list')
 
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(DeleteBookingView, self).dispatch(*args, **kwargs)
+
     def get_object(self, queryset=None):
         """ Заказ создавался request.user. """
         booking = super(DeleteBookingView, self).get_object()
@@ -345,7 +531,7 @@ class DeleteBookingView(LoginRequiredMixin, DeleteView):
             raise Http404
         # Если заказ выполняется, удалять его нельзя
         status = booking.get_status()
-        if status == Booking.RUNNING:
+        if status == Booking.RUNNING or status == Booking.WAITING_FOR_APPROVAL:
             raise Http404
 
         return booking

@@ -1,7 +1,9 @@
 from django.conf.urls import patterns, url
 from django.contrib import admin
 from .views import BookingCreate, BookingListView, serve_booking_view,\
-    complete_booking_view, OwnBookingListView, DeleteBookingView
+    complete_booking_view, OwnBookingListView, DeleteBookingView,\
+    approve_performer_view, reject_performer_view
+
 
 admin.autodiscover()
 
@@ -12,6 +14,10 @@ urlpatterns = patterns('',
                            name='booking-list'),
                        url(r'^serve/$', serve_booking_view,
                            name='serve-booking'),
+                       url(r'^approve_booking/$', approve_performer_view,
+                           name='approve-booking'),
+                       url(r'^reject_performer/$', reject_performer_view,
+                           name='decline-booking'),
                        url(r'^complete/$', complete_booking_view,
                            name='complete-booking'),
                        url(r'^own_booking_list/$', OwnBookingListView.as_view(),

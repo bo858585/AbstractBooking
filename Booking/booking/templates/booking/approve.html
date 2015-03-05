@@ -1,0 +1,13 @@
+<form action="{% url 'approve-booking' %}" method="post">{% csrf_token %}
+  <input type="hidden" value="{{val.id}}" name="booking" id="booking_id"/>
+  <button type="button submit" class="btn btn-success approve">
+    Подтвердить
+  </button>
+</form>
+<br>
+<form action="{% url 'decline-booking' %}" method="post">{% csrf_token %}
+  <input type="hidden" value="{{val.id}}" name="booking" id="booking_id"/>
+  <button type="button submit" class="btn btn-success decline">
+    Отклонить
+  </button>
+</form>

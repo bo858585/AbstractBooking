@@ -19,9 +19,10 @@ tr th#text { width: 40%; }
 tr th#price { width: 6%; }
 tr th#status { width: 7%; }
 tr th#customer { width: 7%; }
-tr th#performer { width: 8%; }
+tr th#performer { width: 10%; }
 tr th#date { width: 9%; }
-tr th#actions { width: 8%; }
+tr th#actions { width: 10%; }
+tr th#delete { width: 8%; }
 
 </style>
 <h1>Список заказов</h1>
@@ -40,7 +41,7 @@ tr th#actions { width: 8%; }
       <th id="date">Дата создания</th>
       <th id="actions">Ваши действия</th>
       {% if user|has_group:"customers" %}
-          <th id="actions">Удалить заказ</th>
+          <th id="delete">Удалить заказ</th>
       {% endif %}
     </tr>
   </thead>
@@ -62,10 +63,14 @@ tr th#actions { width: 8%; }
             {% endif %}
         {% else %}
             {% if booking.0.status == "running" %}
-                Взят на исполнение
+                Исполняется
             {% else %}
                 {% if booking.0.status == "completed" %}
                     Завершен
+                {% else %}
+                    {% if booking.0.status == "waiting_for_approval" %}
+                        Ожидает подтверждения
+                    {% endif %}
                 {% endif %}
             {% endif %}
         {% endif %}
@@ -82,11 +87,14 @@ tr th#actions { width: 8%; }
           {% if booking.1 == 'can_complete' %}
               {% include "booking/complete.html" with val=booking.0 %}
           {% endif %}
+          {% if booking.1 == 'can_approve' %}
+              {% include "booking/approve.html" with val=booking.0 %}
+          {% endif %}
       </td>
       {% if user|has_group:"customers" %}
           <td>
               {% if booking.0.customer == user %}
-                  {% if booking.0.status != "running" %}
+                  {% if booking.0.status != "running" and status != "waiting_for_approval" %}
                       <form method="POST" action="{% url 'delete-booking' booking.0.pk %}"/>
                           {% csrf_token %}<input type="submit" value="Удалить">
                       </form>

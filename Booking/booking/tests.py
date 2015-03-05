@@ -1030,3 +1030,66 @@ class BookingViewsTestCase(TestCase):
 
         bookings = Booking.objects.all()
         self.assertEqual(len(bookings), 1)
+
+    def test_update_booking(self):
+        """
+        Проверка возможности обновления заказа
+        """
+
+        user1 = User.objects.get(username='john')
+        user1_cash_before = user1.profile.cash
+
+        # Вход
+        response = self.client.post('/accounts/login/',
+                                    {'username': 'john', 'password': 'johnpassword'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Просмотр списка заказов
+        response = self.client.get(reverse('booking-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Просмотр формы создания заказа
+        response = self.client.get(reverse('create-booking'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_form.html')
+
+        # Создание заказа
+        response = self.client.post(reverse('create-booking'),
+                                    {'title': 'test_title1',
+                                        'text': 'test_text1', 'price': '12.00'},
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Проверка того, что заказ в базе после создания
+        self.assertEqual(len(Booking.objects.all()), 1)
+        booking = Booking.objects.all()[0]
+
+        user1 = User.objects.get(username='john')
+
+        self.assertEqual(booking.get_customer(), user1)
+        self.assertEqual(booking.title, 'test_title1')
+        self.assertEqual(booking.text, 'test_text1')
+        self.assertEqual(booking.price, 12.0)
+        self.assertEqual(booking.status, Booking.PENDING)
+
+        # Обновление заказа
+        response = self.client.post(reverse('update-booking',
+                                    kwargs={"pk": booking.id}),
+                                    {'title': 'test_title2',
+                                     'text': 'test_text2'},
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        user1 = User.objects.get(username='john')
+        self.assertEqual(len(Booking.objects.all()), 1)
+        booking = Booking.objects.all()[0]
+
+        self.assertEqual(booking.get_customer(), user1)
+        self.assertEqual(booking.title, 'test_title2')
+        self.assertEqual(booking.text, 'test_text2')
+        self.assertEqual(booking.price, 12.0)
+        self.assertEqual(booking.status, Booking.PENDING)

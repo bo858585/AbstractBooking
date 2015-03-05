@@ -51,7 +51,15 @@ tr th#delete { width: 8%; }
 
     {% for booking in bookings %}
     <tr>
-      <td>{{ booking.0.title }}</td>
+      <td>
+        {% if booking.0.customer = user %}
+            <a href="{% url 'update-booking' booking.0.pk %}">
+                {{ booking.0.title }}
+            </a>
+        {% else %}
+            {{ booking.0.title }}
+        {% endif %}
+      </td>
       <td>{{ booking.0.text|linebreaks }}</p></td>
       <td>{{ booking.0.price }}</td>
       <td>

@@ -20,7 +20,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.db.models import Q
 from django.core.urlresolvers import reverse_lazy
 from django.http import Http404
-from django.views.generic.edit import FormView
+from django.views.generic.edit import UpdateView
 
 from .models import Booking
 from .forms import BookingForm
@@ -319,15 +319,8 @@ def reject_performer_view(request):
     """
     Заказчик отклоняет попытку исполнителя взять его заказ.
 
-    При клике заказчика на кнопку “Подтвердить заказ” производится
-    проверка, хватит ли заказчику этого заказа (customer) денег на оплату
-    заказа. Если хватит, со счета заказчика списывается цена заказа. Заказу
-    назначается статус “Выполняется”. Заказ сохраняется. Эти операции - в одной
-    транзакции. (это значит, что системе в ленту заказов - виртульно, согласно
-    статусу заказа - перешли деньги со счета заказчика, то есть система
-    выступает посредником между заказчиком и исполнителем). Страница
-    обновляется. Кнопки “Подтвердить/Отклонить заказ” на заказе исчезают, появляется кнопка
-    “Завершить заказ”, доступная только заказчику, сделавшему этот заказ.
+    Статус заказа становится “Ожидает выполнения”. Удалять заказ теперь можно.
+    Как и подавать заявку на исполнение - любой исполнитель может это сделать.
     """
     if request.method == "POST":
         if request.is_ajax():
@@ -387,11 +380,12 @@ def complete_booking_view(request):
     Перевод средств со счета системы на счет исполнителя заказчиком и
     завершение заказа.
 
-    При нажатии на кнопку “Завершить заказ” сумма заказа в ленте в зависимости
-    от комиссии (целое число от 0 до 100 процентов, указывается в админке)
-    делится на две части - на счет исполнителя заказа и системы поступают две
-    эти части суммы. Заказу назначается статус “Завершен”. Страница обновляется.
-    Заказ исчезает из ленты как выполнившийся.
+    Сумма заказа в ленте в зависимости от комиссии (целое число от 0 до 100
+    процентов, указывается в админке с системном счете) делится на две части -
+    на счет исполнителя заказа (виден пользователю на его странице) и системы
+    (SystemAccount в админке) поступают две эти части суммы. Заказу назначается
+    статус “Завершен”. Заказчику выводятся сообщения с указанием этих сумм.
+    Страница обновляется. Заказ исчезает из ленты как выполнившийся.
     """
     if request.method == "POST":
         if request.is_ajax():
@@ -534,4 +528,26 @@ class DeleteBookingView(LoginRequiredMixin, DeleteView):
         if status == Booking.RUNNING or status == Booking.WAITING_FOR_APPROVAL:
             raise Http404
 
+        return booking
+
+class UpdateBookingView(LoginRequiredMixin, UpdateView):
+    """
+    Создание заказа
+    """
+    model = Booking
+    fields = ['title', 'text']
+    success_url = reverse_lazy('booking-list')
+    template_name_suffix = '_update_form'
+
+    @method_decorator(login_required)
+    @method_decorator(permission_required('booking.add_booking',
+        raise_exception=True))
+    def dispatch(self, *args, **kwargs):
+        return super(UpdateBookingView, self).dispatch(*args, **kwargs)
+
+    def get_object(self, queryset=None):
+        """ Заказ создавался request.user. """
+        booking = super(UpdateBookingView, self).get_object()
+        if booking.customer != self.request.user:
+            raise Http404
         return booking

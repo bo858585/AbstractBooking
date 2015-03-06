@@ -446,11 +446,14 @@ class OwnBookingListView(LoginRequiredMixin, ListView):
     """
     Список заказов самого пользователя
     """
+
     CAN_COMPLETE = "can_complete"
     CAN_TAKE = "can_take"
     CAN_VIEW = "can_view"
     # Кнопка взятия заказа неактивна
     NOT_ACTIVE = "not_active"
+    # Заказчик может подтверждать/отклонять заказ
+    CAN_APPROVE = "can_approve"
 
     model = Booking
     paginate_by = 20
@@ -500,6 +503,21 @@ class OwnBookingListView(LoginRequiredMixin, ListView):
                     if o.status == Booking.COMPLETED:
                         # Если заказ завершен, его можно только просматривать.
                         permissions_list.append(self.CAN_VIEW)
+                    else:
+                        if o.status == Booking.WAITING_FOR_APPROVAL:
+                            # Заказ ждет подтверждения заказчиком после попытки
+                            # исполнителя его взять
+                            if not user.has_perm("booking.add_booking"):
+                                # Для исполнителя кнопка заказа неактивна
+                                permissions_list.append(self.NOT_ACTIVE)
+                            else:
+                                # Заказчик может подтрверждать/отклонять,
+                                # если создавал этот заказ
+                                if o.customer == user:
+                                    permissions_list.append(self.CAN_APPROVE)
+                                else:
+                                    permissions_list.append(self.CAN_VIEW)
+
 
         context['bookings'] = zip(context['object_list'], permissions_list)
 
@@ -532,7 +550,7 @@ class DeleteBookingView(LoginRequiredMixin, DeleteView):
 
 class UpdateBookingView(LoginRequiredMixin, UpdateView):
     """
-    Создание заказа
+    Обновление заказа
     """
     model = Booking
     fields = ['title', 'text']

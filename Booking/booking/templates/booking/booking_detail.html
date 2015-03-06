@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if user.is_authenticated %}
+
+<style>
+textarea {
+  border-radius : 5px;
+}
+
+table {
+  table-layout: fixed;
+  word-wrap: break-word;
+  overflow: hidden;
+  border: 3px;
+}
+
+table#comment_list tr th#date { width: 10%; }
+table#comment_list tr th#creator { width: 10%; }
+table#comment_list tr th#text { width: 50%; }
+
+table#booking tr th#date { width: 10%; }
+table#booking tr th#creator { width: 10%; }
+table#booking tr th#text { width: 50%; }
+
+</style>
+
+<h1>Данные заказа</h1>
+
+<div class=".table-striped">
+  <table class="table" id="booking">
+    <thead>
+      <tr>
+        <th id="date">Название</th>
+        <th id="creator">Дата создания</th>
+        <th id="text">Автор</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{ object.title }}</td>
+        <td>{{ object.date }}</td>
+        <td>{{ object.text|linebreaks }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+{% if comments %}
+
+<h1>Комментарии</h1>
+
+<div class=".table-striped">
+
+<table class="table" id="comment_list">
+  <thead>
+    <tr>
+      <th id="date">Дата создания</th>
+      <th id="creator">Автор</th>
+      <th id="text">Комментарий</th>
+    </tr>
+  </thead>
+  <tbody>
+      {% for comment in comments %}
+      <tr>
+         <td>{{ comment.date }}</td>
+         <td>{{ comment.creator }}</td>
+         <td>{{ comment.text|linebreaks }}</td>
+       </tr>
+      {% endfor %}
+    <tbody>
+</table>
+</div>
+{% endif %}
+
+{% include "booking/comment_form.html" with val=object.id %}
+
+{% endif %}
+{% endblock %}

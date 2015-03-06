@@ -5,7 +5,7 @@
 """
 
 from django.forms import ModelForm
-from .models import Booking
+from .models import Booking, Comment
 
 
 class BookingForm(ModelForm):
@@ -16,3 +16,13 @@ class BookingForm(ModelForm):
     class Meta:
         model = Booking
         fields = ['title', 'text', 'price']
+
+
+class CommentForm(ModelForm):
+
+    """
+    Форма для создания заказа
+    """
+    class Meta:
+        model = Comment
+        fields = ['text']

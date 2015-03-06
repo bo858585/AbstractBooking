@@ -7,22 +7,22 @@
 {% if bookings %}
 
 <style>
-table {
+table#booking_list {
     table-layout: fixed;
     word-wrap: break-word;
     overflow: hidden;
     border: 3px;
 }
 
-tr th#name { width: 7%; }
-tr th#text { width: 40%; }
-tr th#price { width: 6%; }
-tr th#status { width: 7%; }
-tr th#customer { width: 7%; }
-tr th#performer { width: 10%; }
-tr th#date { width: 9%; }
-tr th#actions { width: 10%; }
-tr th#delete { width: 8%; }
+table#booking_list tr th#name { width: 7%; }
+table#booking_list tr th#text { width: 40%; }
+table#booking_list tr th#price { width: 6%; }
+table#booking_list tr th#status { width: 7%; }
+table#booking_list tr th#customer { width: 7%; }
+table#booking_list tr th#performer { width: 10%; }
+table#booking_list tr th#date { width: 9%; }
+table#booking_list tr th#actions { width: 10%; }
+table#booking_list tr th#delete { width: 8%; }
 
 </style>
 <h1>Список заказов</h1>
@@ -52,12 +52,19 @@ tr th#delete { width: 8%; }
     {% for booking in bookings %}
     <tr>
       <td>
+        {{ booking.0.title }}
+
         {% if booking.0.customer = user %}
             <a href="{% url 'update-booking' booking.0.pk %}">
-                {{ booking.0.title }}
+                Редактирование
             </a>
         {% else %}
             {{ booking.0.title }}
+        {% endif %}
+        {% if booking.0.customer = user or booking.0.performer = user and booking.0.status != "waiting_for_approval" %}
+            <a href="{% url 'booking-detail' booking.0.pk %}">
+                Обсудить
+            </a>
         {% endif %}
       </td>
       <td>{{ booking.0.text|linebreaks }}</p></td>
@@ -85,7 +92,7 @@ tr th#delete { width: 8%; }
       </td>
       <td>{{ booking.0.customer }}</td>
       <td>{% if booking.0.performer %} {{ booking.0.performer }} {% else %} Нет {% endif %}</td>
-      <td>{{ booking.0.date|date:'Y-m-d H:i' }}</td>
+      <td>{{ booking.0.date|date }}</td>
       <td>
           {% if booking.1 == 'can_take' %}
               {% include "booking/serve.html" with val=booking.0 %}

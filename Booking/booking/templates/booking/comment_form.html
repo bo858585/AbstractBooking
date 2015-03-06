@@ -1,0 +1,10 @@
+<form role="form" action="{% url 'create-comment' %}" method="post">{% csrf_token %}
+  <div class="form-group">
+    {{ form.text.errors }}
+    <textarea class="field" name="text" id="text_id" class="form-control span10" rows="10" cols="100" placeholder="Добавьте комментарий"></textarea>
+    <input type="hidden" value="{{val}}" name="booking" id="booking_id"/>
+  </div>
+  <button type="button submit" class="btn btn-success">
+    <i class="icon-user icon-white"></i>Добавить комментарий
+  </button>
+</form>

@@ -166,3 +166,10 @@ class SystemAccount(models.Model):
         Комиссия системы
         """
         return self.commission
+
+
+class Comment(models.Model):
+    booking = models.ForeignKey(Booking, related_name='booking_comments')
+    text = models.TextField(max_length=1000)
+    date = models.DateTimeField(auto_now_add=True)
+    creator = models.ForeignKey(User, related_name='creator_comments')

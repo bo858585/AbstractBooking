@@ -21,9 +21,10 @@ from django.db.models import Q
 from django.core.urlresolvers import reverse_lazy
 from django.http import Http404
 from django.views.generic.edit import UpdateView
+from django.views.generic.detail import DetailView
 
-from .models import Booking
-from .forms import BookingForm
+from .models import Booking, Comment
+from .forms import BookingForm, CommentForm
 from Booking.views import LoginRequiredMixin
 
 import json
@@ -526,7 +527,8 @@ class OwnBookingListView(LoginRequiredMixin, ListView):
 
 class DeleteBookingView(LoginRequiredMixin, DeleteView):
     """
-    Удаление заказа
+    Удаление заказа.
+    Необходимо сделать удаление комментариев заказа.
     """
 
     model = Booking
@@ -552,6 +554,7 @@ class UpdateBookingView(LoginRequiredMixin, UpdateView):
     """
     Обновление заказа
     """
+
     model = Booking
     fields = ['title', 'text']
     success_url = reverse_lazy('booking-list')
@@ -564,8 +567,68 @@ class UpdateBookingView(LoginRequiredMixin, UpdateView):
         return super(UpdateBookingView, self).dispatch(*args, **kwargs)
 
     def get_object(self, queryset=None):
-        """ Заказ создавался request.user. """
+        """ Заказ создавался текущим пользователем """
         booking = super(UpdateBookingView, self).get_object()
         if booking.customer != self.request.user:
             raise Http404
         return booking
+
+
+class BookingDetailView(DetailView):
+    """
+    Детализированный вид заказа.
+    Сюда же включен список комментариев к нему.
+    """
+    model = Booking
+
+    def get_context_data(self, **kwargs):
+        context = super(BookingDetailView, self).get_context_data(**kwargs)
+        context['comments'] = reversed(self.object.booking_comments.all())
+        return context
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(BookingDetailView, self).dispatch(*args, **kwargs)
+
+    def get_object(self, queryset=None):
+        """ Текущий пользователь - создатель или исполнитель заказа """
+        booking = super(BookingDetailView, self).get_object()
+        if booking.customer != self.request.user and\
+           booking.performer != self.request.user:
+            raise Http404
+        return booking
+
+
+class CreateCommentView(LoginRequiredMixin, CreateView):
+    """
+    Создание заказа
+    """
+
+    model = Comment
+    fields = ['text']
+    form_class = CommentForm
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(CreateCommentView, self).dispatch(*args, **kwargs)
+
+    def form_valid(self, form):
+        comment = form.save(commit=False)
+        booking_id = self.request.POST.get('booking')
+        if booking_id == "":
+            raise Http404
+
+        booking = Booking.objects.get(id=booking_id)
+
+        # Пользователь должен быть либо исполнителем заказа,
+        # либо создателем, но, если он исполнитель и его заявка пока что не
+        # подтверждена, он не может комментировать
+        if booking.customer != self.request.user and\
+           booking.performer != self.request.user and not\
+           (booking.performer == self.request.user and\
+            booking.status == Booking.WAITING_FOR_APPROVAL):
+            raise Http404
+        comment.booking = booking
+        comment.creator = self.request.user
+        comment.save()
+        return HttpResponseRedirect(reverse_lazy('booking-list'))

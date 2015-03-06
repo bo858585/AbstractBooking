@@ -186,33 +186,78 @@ $ python manage.py test booking.tests.BookingViewsTestCase
 
 ###Развертывание
 
+/home/user/work/Booking/AbstractBooking/Booking - этот путь к проекту везде необходимо заменить на локальный.
+
+**Настройка supervisor:**
+
 ```sh
-$ apt-get install nginx
-$ sudo apt-get install uwsgi uwsgi-plugin-python
-$ cp /etc/nginx/sites-available/default /etc/nginx/sites-available/_default
-$ nano /etc/nginx/sites-available/default
-$
-$# Вставить в default конфигурацию ниже:
-$# (Пути к проекту заменить на локальные)
-$server {
-$  listen   80;
-$  server_name localhost;
-$  
-$  location /static/  {
-$    alias /home/user/work/Booking/AbstractBooking/Booking/static_for_deploy/;
-$  }
-$  
-$  location / {
-$    root            /home/user/work/Booking/AbstractBooking/Booking/Booking;
-$    uwsgi_pass      127.0.0.1:3031;
-$    include         uwsgi_params;
-$  }
-$}
-$ cd /home/user/work/Booking/AbstractBooking/Booking
-$ mkdir static_for_deploy
-$ python manage.py collectstatic
-$
-$ uwsgi --socket :3031 --chdir ./ --env DJANGO_SETTINGS_MODULE=Booking.settings --module "django.core.wsgi:get_wsgi_application()"
-$
-$ sudo /etc/init.d/nginx reload
+apt-get install supervisor
+sudo apt-get install uwsgi uwsgi-plugin-python
+
+# Конфигурационный файл
+
+sudo nano /etc/supervisor/conf.d/Booking.conf
+
+[program:Booking]
+command = /home/user/.virtualenvs/booking/bin/uwsgi --socket :3031 --chdir /home/user/work/Booking/AbstractBooking/Booking --env DJANGO_SETTINGS_MODULE=Booking.settings --module "django.core.wsgi:get_wsgi_application()"
+autostart = true
+autorestart = true
+stderr_logfile = /home/user/work/Booking/AbstractBooking/Booking/wsgi_err.log
+stdout_logfile = /home/user/work/Booking/AbstractBooking/Booking/wsgi.log
+redirect_stderr=true
+stopwaitsecs = 60
+stopsignal = INT
+
+#Обновляем supervisor
+
+sudo supervisorctl update
+
+#Теперь мы можем проверить статус приложения командой
+
+sudo supervisorctl status
+
+#и перезапустить
+
+sudo supervisorctl restart Booking
+```
+
+**Соберем статику:**
+
+```sh
+cd /home/user/work/Booking/AbstractBooking/Booking
+mkdir static_for_deploy
+python manage.py collectstatic
+```
+
+**Настройка nginx:**
+
+```sh
+apt-get install nginx
+cp /etc/nginx/sites-available/default /etc/nginx/sites-available/_default
+nano /etc/nginx/sites-available/default
+
+#Вставить в default конфигурацию ниже:
+
+server {
+  listen   80;
+  server_name localhost;
+
+  error_log   /var/log/nginx/error.log;
+
+  location /static/  {
+    alias /home/user/work/Booking/AbstractBooking/Booking/static_for_deploy/;
+    expires 30d;
+  }
+
+  location / {
+    root            /home/user/work/Booking/AbstractBooking/Booking/Booking;
+    uwsgi_pass      127.0.0.1:3031;
+    include         uwsgi_params;
+  }
+}
+
+
+#Теперь перезапускаем nginx:
+
+sudo /etc/init.d/nginx reload
 ```

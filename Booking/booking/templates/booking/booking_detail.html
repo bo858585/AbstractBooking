@@ -18,11 +18,12 @@ table {
 
 table#comment_list tr th#date { width: 10%; }
 table#comment_list tr th#creator { width: 10%; }
-table#comment_list tr th#text { width: 50%; }
+table#comment_list tr th#text { width: 70%; }
+table#comment_list tr th#price { width: 10%; }
 
 table#booking tr th#date { width: 10%; }
 table#booking tr th#creator { width: 10%; }
-table#booking tr th#text { width: 50%; }
+table#booking tr th#text { width: 70%; }
 
 </style>
 
@@ -34,7 +35,8 @@ table#booking tr th#text { width: 50%; }
       <tr>
         <th id="date">Название</th>
         <th id="creator">Дата создания</th>
-        <th id="text">Автор</th>
+        <th id="text">Текст</th>
+        <th id="price">Цена</th>
       </tr>
     </thead>
     <tbody>
@@ -42,6 +44,7 @@ table#booking tr th#text { width: 50%; }
         <td>{{ object.title }}</td>
         <td>{{ object.date }}</td>
         <td>{{ object.text|linebreaks }}</td>
+        <td>{{ object.price }}</td>
       </tr>
     </tbody>
   </table>
@@ -57,16 +60,16 @@ table#booking tr th#text { width: 50%; }
   <thead>
     <tr>
       <th id="date">Дата создания</th>
-      <th id="creator">Автор</th>
       <th id="text">Комментарий</th>
+      <th id="creator">Автор</th>
     </tr>
   </thead>
   <tbody>
       {% for comment in comments %}
       <tr>
          <td>{{ comment.date }}</td>
-         <td>{{ comment.creator }}</td>
          <td>{{ comment.text|linebreaks }}</td>
+         <td>{{ comment.creator }}</td>
        </tr>
       {% endfor %}
     <tbody>

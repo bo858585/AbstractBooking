@@ -110,7 +110,7 @@ table#booking_list tr th#delete { width: 8%; }
           <td>
               {% if booking.0.customer == user %}
                   {% if booking.0.status != "running" and status != "waiting_for_approval" %}
-                      <form method="POST" action="{% url 'delete-booking' booking.0.pk %}"/>
+                      <form method="POST" action="{% url 'delete-booking' booking.0.pk %}?page={{page_type}}"/>
                           {% csrf_token %}<input type="submit" value="Удалить">
                       </form>
                   {% endif %}

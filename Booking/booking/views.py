@@ -142,6 +142,7 @@ class BookingListView(LoginRequiredMixin, ListView):
                                     permissions_list.append(self.CAN_VIEW)
 
         context['bookings'] = zip(context['object_list'], permissions_list)
+        context['page_type'] = "all_bookings"
 
         return context
 
@@ -521,7 +522,7 @@ class OwnBookingListView(LoginRequiredMixin, ListView):
 
 
         context['bookings'] = zip(context['object_list'], permissions_list)
-
+        context['page_type'] = "own_bookings"
         return context
 
 
@@ -532,11 +533,23 @@ class DeleteBookingView(LoginRequiredMixin, DeleteView):
     """
 
     model = Booking
-    success_url = reverse_lazy('booking-list')
 
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         return super(DeleteBookingView, self).dispatch(*args, **kwargs)
+
+    def get_success_url(self):
+        """
+        Редирект на страницу всех заказов или на страницу заказов пользователя
+        """
+        page = self.request.GET.get("page", None)
+        print page
+        if page == "own_bookings":
+            return reverse_lazy('own-booking-list')
+        else:
+            if page == "all_bookings":
+                return reverse_lazy('booking-list')
+        return reverse_lazy('booking-list')
 
     def get_object(self, queryset=None):
         """ Заказ создавался request.user. """

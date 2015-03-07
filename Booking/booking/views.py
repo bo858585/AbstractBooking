@@ -23,6 +23,8 @@ from django.http import Http404
 from django.views.generic.edit import UpdateView
 from django.views.generic.detail import DetailView
 
+from django.core.urlresolvers import reverse
+
 from .models import Booking, Comment
 from .forms import BookingForm, CommentForm
 from Booking.views import LoginRequiredMixin
@@ -543,7 +545,6 @@ class DeleteBookingView(LoginRequiredMixin, DeleteView):
         Редирект на страницу всех заказов или на страницу заказов пользователя
         """
         page = self.request.GET.get("page", None)
-        print page
         if page == "own_bookings":
             return reverse_lazy('own-booking-list')
         else:
@@ -630,6 +631,16 @@ class CreateCommentView(LoginRequiredMixin, CreateView):
     def dispatch(self, *args, **kwargs):
         return super(CreateCommentView, self).dispatch(*args, **kwargs)
 
+    def get_success_url(self):
+        """
+        Редирект на страницу всех заказов или на страницу заказов пользователя
+        """
+        booking_id = self.request.POST.get('booking')
+        if booking_id == "":
+            raise Http404
+
+        return reverse('booking-detail', kwargs={"pk": booking_id})
+
     def form_valid(self, form):
         comment = form.save(commit=False)
         booking_id = self.request.POST.get('booking')
@@ -649,4 +660,4 @@ class CreateCommentView(LoginRequiredMixin, CreateView):
         comment.booking = booking
         comment.creator = self.request.user
         comment.save()
-        return HttpResponseRedirect(reverse_lazy('booking-list'))
+        return HttpResponseRedirect(self.get_success_url())

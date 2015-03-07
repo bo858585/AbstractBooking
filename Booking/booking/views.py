@@ -563,6 +563,11 @@ class DeleteBookingView(LoginRequiredMixin, DeleteView):
 
         return booking
 
+    def delete(self, request, *args, **kwargs):
+        Comment.objects.filter(booking=self.get_object()).delete()
+        return super(DeleteBookingView, self).delete(request, *args, **kwargs)
+
+
 class UpdateBookingView(LoginRequiredMixin, UpdateView):
     """
     Обновление заказа

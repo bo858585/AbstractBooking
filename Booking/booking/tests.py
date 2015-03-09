@@ -6,6 +6,9 @@ from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 
+import time
+
+
 class BookingModelTestCase(TestCase):
 
     def setUp(self):
@@ -1094,3 +1097,228 @@ class BookingViewsTestCase(TestCase):
         self.assertEqual(booking.text, 'test_text2')
         self.assertEqual(booking.price, 12.0)
         self.assertEqual(booking.status, Booking.PENDING)
+
+
+class BookingViewsPerformanceTestCase(TestCase):
+
+    # Число пользователей
+    K = 10
+    # Число заказов одного пользователя
+    M = 1
+
+    def setUp(self):
+        """
+        Создать 2*K пользователей: K заказчиков, K исполнителей.
+        Назначение им прав на создание и исполнение заказа соответсвенно.
+        """
+        SystemAccount.objects.create()
+
+        # Здесь хранятся пользователи
+        customer_users = []
+        performer_users = []
+
+        # Создание группы с правами на создание заказа
+        booking_content = ContentType.objects.get_for_model(Booking)
+
+        customers = Group.objects.create(name="customers")
+
+        add, is_created = Permission.objects.get_or_create(
+            content_type=booking_content, codename='add_booking')
+        change, is_created = Permission.objects.get_or_create(
+            content_type=booking_content, codename='change_booking')
+        delete, is_created = Permission.objects.get_or_create(
+            content_type=booking_content, codename='delete_booking')
+
+        customers.permissions.add(add)
+        customers.permissions.add(change)
+        customers.permissions.add(delete)
+        customers.save()
+
+        self.assertEqual(len(customers.permissions.all()), 3)
+        self.assertEqual(customers.permissions.all()[0], add)
+        self.assertEqual(customers.permissions.all()[1], change)
+        self.assertEqual(customers.permissions.all()[2], delete)
+
+        # Создание K пользователей.
+        # Назначение каждому из K пользователей прав на создание заказа
+        for i in range(self.K):
+            print "".join(['_test_customer', str(i)])
+            user = User.objects.create_user(
+                "".join(['_test_customer', str(i)]),
+                "".join(["_test_customer", str(i), "@test_user.com"]),
+                'test_password'
+            )
+            user.groups.add(customers)
+            user.user_permissions.add(add)
+            user.user_permissions.add(change)
+            user.user_permissions.add(delete)
+            user.save()
+            UserProfile.objects.create(user=user, cash=100.00)
+            self.assertEqual(len(user.groups.all()), 1)
+            self.assertEqual(user.groups.all()[0], customers)
+            customer_users.append(user)
+
+        # Создание группы с правами
+        performers, is_created = Group.objects.get_or_create(name="performers")
+        perform, is_created = Permission.objects.get_or_create(
+            content_type=booking_content, codename='perform_perm')
+
+        performers.permissions.add(perform)
+        performers.save()
+
+        self.assertEqual(len(performers.permissions.all()), 1)
+        self.assertEqual(performers.permissions.all()[0], perform)
+
+        # Создание K пользователей-исполнителей.
+        # Назначение каждому из K пользователей прав на выполнение заказа
+        for i in range(self.K):
+            user = User.objects.create_user(
+                "".join(['test_performer', str(i)]),
+                "".join(["test_performer", str(i), "@test_user.com"]),
+                'test_password'
+            )
+            UserProfile.objects.create(user=user, cash=0.00)
+            user.groups.add(performers)
+            user.user_permissions.add(perform)
+            user.save()
+            self.assertEqual(len(user.groups.all()), 1)
+            self.assertEqual(user.groups.all()[0], performers)
+            performer_users.append(user)
+
+
+    def test_K_customers_K_performers_M_bookings(self):
+        """
+        K заказчиков создают каждый M заказов.
+        K исполнителей берут на выполнение каждый M заказов.
+        Каждый из K заказчиков подтверждают взятие на выполнение M заказов.
+        Каждый из K заказчиков завершают M заказов.
+        """
+
+        time_before = time.time()
+
+        for i in range(self.K):
+            user1 = User.objects.get(username="".join(['_test_customer', str(i)]))
+            user1_cash_before = user1.profile.cash
+
+            # Вход
+            response = self.client.post('/accounts/login/',
+                {'username': "".join(['_test_customer', str(i)]),
+                 'password': 'test_password'},
+                 follow=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+            # Просмотр списка заказов
+            response = self.client.get(reverse('booking-list'))
+            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+            # Просмотр формы создания заказа
+            response = self.client.get(reverse('create-booking'))
+            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed(response, 'booking/booking_form.html')
+
+            # Создание заказа
+            response = self.client.post(reverse('create-booking'),
+                                        {'title': "".join(['test_title', str(i)]),
+                                         'text': "".join(['test_text', str(i)]),
+                                         'price': '10.00'},
+                                        follow=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+            # Проверка того, что заказ в базе после создания
+            self.assertEqual(len(Booking.objects.all()), i+1)
+            booking = Booking.objects.all()[i]
+
+            user1 = User.objects.get(username="".join(['_test_customer', str(i)]))
+
+            self.assertEqual(booking.get_customer(), user1)
+            self.assertEqual(booking.title, "".join(['test_title', str(i)]))
+            self.assertEqual(booking.text, "".join(['test_text', str(i)]))
+            self.assertEqual(booking.price, 10.0)
+            self.assertEqual(booking.status, Booking.PENDING)
+
+            # Выход
+            response = self.client.post('/accounts/logout/', follow=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed(response, 'registration/logged_out.html')
+
+            # Вход из-под исполнителя
+            response = self.client.post('/accounts/login/',
+                {'username': "".join(['test_performer', str(i)]),
+                 'password': 'test_password'},
+                 follow=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+            user2 = User.objects.get(username="".join(['test_performer', str(i)]))
+
+
+
+            # Просмотр списка заказов
+            response = self.client.get(reverse('booking-list'))
+            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+            # Взятие заказа на исполнение
+            response = self.client.post(reverse('serve-booking'),
+                                        {'booking': booking.id}, follow=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+            # Ждет подтверждения взятия на исполнение
+            booking = Booking.objects.all()[i]
+            self.assertEqual(booking.get_performer(), user2)
+            self.assertEqual(booking.get_status(), Booking.WAITING_FOR_APPROVAL)
+
+            # Выход
+            response = self.client.post('/accounts/logout/', follow=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed(response, 'registration/logged_out.html')
+
+            # Вход из-под заказчика
+            response = self.client.post('/accounts/login/',
+                {'username': "".join(['_test_customer', str(i)]),
+                 'password': 'test_password'}, follow=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+            user = User.objects.get(username="".join(['_test_customer', str(i)]))
+
+            # Подтверждение исполнителем взятия заказа заказчиком
+            response = self.client.post(reverse('approve-booking'),
+                                        {'booking': booking.id}, follow=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+            # Взят на исполнение
+
+            booking = Booking.objects.all()[i]
+            self.assertEqual(booking.get_status(), Booking.RUNNING)
+            self.assertEqual(user1.profile.cash + booking.price, user1_cash_before)
+
+            # Закрытие заказа
+            response = self.client.post(reverse('complete-booking'),
+                                        {'booking': booking.id}, follow=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+            # Завершен
+            user2 = User.objects.get(username="".join(['test_performer', str(i)]))
+            booking = Booking.objects.all()[i]
+            self.assertEqual(booking.get_status(), Booking.COMPLETED)
+            system_account = SystemAccount.objects.all()[0]
+            comission = system_account.get_comission()
+            self.assertEqual(system_account.account, booking.price * comission * (i+1))
+            self.assertEqual(user2.profile.cash, booking.price * (1 - comission))
+
+            # Выход
+            response = self.client.post('/accounts/logout/', follow=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed(response, 'registration/logged_out.html')
+
+        time_after = time.time()
+        time_delta = time_after - time_before
+        result = u"Число заказчиков K = %s. Число исполнителей K = %s. Время выполнения: %s секунд." % (self.K, self.K, time_delta)
+        print result

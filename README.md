@@ -310,4 +310,5 @@ alter user django_dev createdb;
 $ cd /home/user/work/Booking/AbstractBooking/Booking
 $ python manage.py test booking.tests.BookingModelTestCase
 $ python manage.py test booking.tests.BookingViewsTestCase
+$ python manage.py test booking.tests.BookingViewsPerformanceTestCase
 ```

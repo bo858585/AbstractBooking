@@ -18,7 +18,7 @@ DATABASES = {
         'NAME': 'django_db',
         # The following settings are not used with sqlite3:
         'USER': 'django_dev',
-        'PASSWORD': '321',
+        'PASSWORD': 'django_dev_password',
         # Empty for localhost through domain sockets or '127.0.0.1' for
         # localhost through TCP.
         'HOST': 'localhost',

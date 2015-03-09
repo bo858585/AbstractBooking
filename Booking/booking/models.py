@@ -21,7 +21,6 @@ class Booking(models.Model):
         Права по-умолчанию обнулены.
         Добавлено право на исполнение заказа.
         """
-        default_permissions = ()
         permissions = (
             ("perform_perm", u"Ability to perform created booking"),
         )

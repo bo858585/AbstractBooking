@@ -84,8 +84,9 @@ class BookingViewsTestCase(TestCase):
         UserProfile.objects.create(user=user2, cash=0.00)
 
         content_type = ContentType.objects.get_for_model(Booking)
-        permission = Permission.objects.create(
+        permission, is_created = Permission.objects.get_or_create(
             content_type=content_type, codename='add_booking')
+
         user1.user_permissions.add(permission)
         user1.save()
 
@@ -1093,4 +1094,3 @@ class BookingViewsTestCase(TestCase):
         self.assertEqual(booking.text, 'test_text2')
         self.assertEqual(booking.price, 12.0)
         self.assertEqual(booking.status, Booking.PENDING)
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            

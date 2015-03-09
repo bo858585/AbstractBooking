@@ -593,7 +593,7 @@ class UpdateBookingView(LoginRequiredMixin, UpdateView):
         return booking
 
 
-class BookingDetailView(DetailView):
+class BookingDetailView(LoginRequiredMixin, DetailView):
     """
     Детализированный вид заказа.
     Сюда же включен список комментариев к нему.
@@ -653,7 +653,7 @@ class CreateCommentView(LoginRequiredMixin, CreateView):
         # либо создателем, но, если он исполнитель и его заявка пока что не
         # подтверждена, он не может комментировать
         if booking.customer != self.request.user and\
-           booking.performer != self.request.user and not\
+           booking.performer != self.request.user or\
            (booking.performer == self.request.user and\
             booking.status == Booking.WAITING_FOR_APPROVAL):
             raise Http404

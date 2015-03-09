@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.test import TestCase
-from booking.models import Booking, SystemAccount, UserProfile
+from booking.models import Booking, SystemAccount, UserProfile, Comment
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
@@ -750,7 +750,7 @@ class BookingViewsTestCase(TestCase):
 
         user = User.objects.get(username='john')
 
-        # Подтверждение исполнителем взятия заказа заказчиком
+        # Подтверждение взятия заказа
         response = self.client.post(reverse('approve-booking'),
                                     {'booking': booking.id}, follow=True)
         self.assertEqual(response.status_code, 200)
@@ -1098,6 +1098,268 @@ class BookingViewsTestCase(TestCase):
         self.assertEqual(booking.price, 12.0)
         self.assertEqual(booking.status, Booking.PENDING)
 
+    def test_create_booking_create_comments(self):
+        """
+        Создание заказа.
+        Создание комментариев заказчиком.
+        Попытка создания комментариев от исполнителя с негативным исходом.
+        Взятие его на исполнение исполнителем.
+        Создание комментариев заказчиком.
+        Попытка создания комментариев от исполнителя с негативным исходом.
+        Подтверждение взятия заказа заказчиком.
+        Создание комментариев заказчиком.
+        Создание комментариев от исполнителя.
+        Закрытие заказа.
+        Создание комментариев заказчиком.
+        Создание комментариев от исполнителя.
+        Наличие комментариев проверяется в базе каждый раз через assert.
+        """
+
+        user1 = User.objects.get(username='john')
+        user1_cash_before = user1.profile.cash
+
+        # Вход
+        response = self.client.post('/accounts/login/',
+                                    {'username': 'john', 'password': 'johnpassword'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Просмотр списка заказов
+        response = self.client.get(reverse('booking-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Просмотр формы создания заказа
+        response = self.client.get(reverse('create-booking'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_form.html')
+
+
+        # Создание заказа
+        response = self.client.post(reverse('create-booking'),
+                                    {'title': 'test_title1',
+                                        'text': 'test_text1', 'price': '12.00'},
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+
+        # Проверка того, что заказ в базе после создания
+        self.assertEqual(len(Booking.objects.all()), 1)
+        booking = Booking.objects.all()[0]
+
+        user1 = User.objects.get(username='john')
+
+        self.assertEqual(booking.get_customer(), user1)
+        self.assertEqual(booking.title, 'test_title1')
+        self.assertEqual(booking.text, 'test_text1')
+        self.assertEqual(booking.price, 12.0)
+        self.assertEqual(booking.status, Booking.PENDING)
+
+        # Создание комментария
+        response = self.client.post(reverse('create-comment'),
+                                    { 'text': 'test_text',
+                                      "booking": booking.id },
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_detail.html')
+
+        # Проверка комментария
+        self.assertEqual(len(Comment.objects.all()), 1)
+        comment = Comment.objects.all()[0]
+        self.assertEqual(comment.creator, user1)
+        self.assertEqual(comment.booking, booking)
+        self.assertEqual(comment.text, 'test_text')
+
+        # Выход
+        response = self.client.post('/accounts/logout/', follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/logged_out.html')
+
+        # Вход из-под исполнителя
+        response = self.client.post('/accounts/login/',
+                                    {'username': 'johndow', 'password': 'dowpassword'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        user2 = User.objects.get(username='johndow')
+
+        # Просмотр списка заказов
+        response = self.client.get(reverse('booking-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Создание комментария (негативный тест)
+        response = self.client.post(reverse('create-comment'),
+                                    { 'text': 'test_text2',
+                                      "booking": booking.id },
+                                    follow=True)
+        self.assertEqual(response.status_code, 404)
+
+        # Взятие заказа на исполнение
+        response = self.client.post(reverse('serve-booking'),
+                                    {'booking': booking.id}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Ждет подтверждения взятия на исполнение
+        booking = Booking.objects.all()[0]
+        self.assertEqual(booking.get_performer(), user2)
+        self.assertEqual(booking.get_status(), Booking.WAITING_FOR_APPROVAL)
+
+        # Создание комментария (негативный тест)
+        response = self.client.post(reverse('create-comment'),
+                                    { 'text': 'test_text3',
+                                      "booking": booking.id },
+                                    follow=True)
+        self.assertEqual(response.status_code, 404)
+
+        # Выход
+        response = self.client.post('/accounts/logout/', follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/logged_out.html')
+
+        # Вход заказчика
+        response = self.client.post('/accounts/login/',
+                                    {'username': 'john', 'password': 'johnpassword'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+
+        # Создание комментария
+        response = self.client.post(reverse('create-comment'),
+                                    { 'text': 'test_text3',
+                                      "booking": booking.id },
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_detail.html')
+
+        # Проверка комментария
+        self.assertEqual(len(Comment.objects.all()), 2)
+        comment = Comment.objects.all()[1]
+        self.assertEqual(comment.creator, user1)
+        self.assertEqual(comment.booking, booking)
+        self.assertEqual(comment.text, 'test_text3')
+
+        # Подтверждение исполнителем взятия заказа заказчиком
+        response = self.client.post(reverse('approve-booking'),
+                                    {'booking': booking.id}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Взят на исполнение
+        booking = Booking.objects.all()[0]
+        self.assertEqual(booking.get_status(), Booking.RUNNING)
+
+        # Создание комментария
+        response = self.client.post(reverse('create-comment'),
+                                    { 'text': 'test_text4',
+                                      "booking": booking.id },
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_detail.html')
+
+        # Проверка комментария
+        self.assertEqual(len(Comment.objects.all()), 3)
+        comment = Comment.objects.all()[2]
+        self.assertEqual(comment.creator, user1)
+        self.assertEqual(comment.booking, booking)
+        self.assertEqual(comment.text, 'test_text4')
+
+        # Выход
+        response = self.client.post('/accounts/logout/', follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/logged_out.html')
+
+        # Вход из-под исполнителя
+        response = self.client.post('/accounts/login/',
+                                    {'username': 'johndow', 'password': 'dowpassword'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        user2 = User.objects.get(username='johndow')
+
+        # Создание комментария
+        response = self.client.post(reverse('create-comment'),
+                                    { 'text': 'test_text4',
+                                      "booking": booking.id },
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_detail.html')
+
+        # Проверка комментария
+        self.assertEqual(len(Comment.objects.all()), 4)
+        comment = Comment.objects.all()[3]
+        self.assertEqual(comment.creator, user2)
+        self.assertEqual(comment.booking, booking)
+        self.assertEqual(comment.text, 'test_text4')
+
+        # Выход
+        response = self.client.post('/accounts/logout/', follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/logged_out.html')
+
+        # Вход заказчика
+        response = self.client.post('/accounts/login/',
+                                    {'username': 'john', 'password': 'johnpassword'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Закрытие заказа
+        response = self.client.post(reverse('complete-booking'),
+                                    {'booking': booking.id}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Завершен
+        user2 = User.objects.get(username='johndow')
+        booking = Booking.objects.all()[0]
+        self.assertEqual(booking.get_status(), Booking.COMPLETED)
+
+
+        # Создание комментария
+        response = self.client.post(reverse('create-comment'),
+                                    { 'text': 'test_text5',
+                                      "booking": booking.id },
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_detail.html')
+
+        # Проверка комментария
+        self.assertEqual(len(Comment.objects.all()), 5)
+        comment = Comment.objects.all()[4]
+        self.assertEqual(comment.creator, user1)
+        self.assertEqual(comment.booking, booking)
+        self.assertEqual(comment.text, 'test_text5')
+
+        # Выход
+        response = self.client.post('/accounts/logout/', follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/logged_out.html')
+
+        # Вход из-под исполнителя
+        response = self.client.post('/accounts/login/',
+                {'username': 'johndow', 'password': 'dowpassword'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        user2 = User.objects.get(username='johndow')
+
+        # Создание комментария
+        response = self.client.post(reverse('create-comment'),
+                                    { 'text': 'test_text6',
+                                      "booking": booking.id },
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_detail.html')
+
+        # Проверка комментария
+        self.assertEqual(len(Comment.objects.all()), 6)
+        comment = Comment.objects.all()[5]
+        self.assertEqual(comment.creator, user2)
+        self.assertEqual(comment.booking, booking)
+        self.assertEqual(comment.text, 'test_text6')
+
 
 class BookingViewsPerformanceTestCase(TestCase):
 
@@ -1184,7 +1446,6 @@ class BookingViewsPerformanceTestCase(TestCase):
             self.assertEqual(len(user.groups.all()), 1)
             self.assertEqual(user.groups.all()[0], performers)
             performer_users.append(user)
-
 
     def test_K_customers_K_performers_M_bookings(self):
         """

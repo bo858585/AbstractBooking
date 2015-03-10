@@ -53,6 +53,16 @@ local    all    postgres    trust
 local    all    all    md5
 local    django_db    django_dev    md5
 
+#Некоторые параметры из /etc/supervisor/conf.d/Booking.conf:
+# (Там, где указаны проценты, необходимо выставить их в зависимости от параметров
+# компьютера.)
+
+shared_buffers = 450MB # 25% of available memory
+huge_pages = try
+temp_buffers = 8MB # default = 8MB
+work_mem = 50MB # 2-4% of available memory
+maintenance_work_mem = 64MB # default = 64MB
+
 # Перезапуск бд
 sudo service postgresql restart
 

@@ -22,7 +22,7 @@ sudo apt-key add -
 sudo apt-get update
 apt-get install postgresql-9.4
 
-# Драйвер для бд:
+# Установить драйвер для Postgres:
 pip install psycopg2
 
 #Установка пароля для пользователя postgres:
@@ -45,10 +45,11 @@ ALTER USER django_dev with encrypted password 'django_dev_password';
 sudo nano /etc/sudoers
 postgres ALL=(ALL) ALL
 
+# Создать базу данных для проекта:
 psql -U postgres
 CREATE DATABASE django_db OWNER django_dev ENCODING 'UTF8';
 
-#Настройки /etc/postgresql/9.4/main/pg_hba.conf :
+#Врести настройки в /etc/postgresql/9.4/main/pg_hba.conf:
 local    all    postgres    trust
 local    all    all    md5
 local    django_db    django_dev    md5
@@ -56,7 +57,7 @@ local    django_db    django_dev    md5
 # В корне проекта лежит пример настройки postgresql.conf.
 # Его необходимо скопировать из корня проекта в /etc/postgresql/9.4/main/postgresql.conf:
 cd proj_dir
-cp ./postgresql.conf ./etc/postgresql/9.4/main/postgresql.conf
+cp ./postgresql.conf ./etc/postgresql/9.4/main
 
 # Перезапуск бд
 sudo service postgresql restart
@@ -109,15 +110,15 @@ redirect_stderr=true
 stopwaitsecs = 60
 stopsignal = INT
 
-#Обновляем supervisor
+# Обновляем supervisor
 
 sudo supervisorctl update
 
-#Теперь мы можем проверить статус приложения командой
+# Теперь мы можем проверить статус приложения командой
 
 sudo supervisorctl status
 
-#и перезапустить
+# и перезапустить
 
 sudo supervisorctl restart Booking
 ```
@@ -129,7 +130,7 @@ apt-get install nginx
 cp /etc/nginx/sites-available/default /etc/nginx/sites-available/_default
 nano /etc/nginx/sites-available/default
 
-#Вставить в default конфигурацию ниже:
+# Вставить в default конфигурацию ниже:
 
 server {
   listen   80;
@@ -149,9 +150,11 @@ server {
   }
 }
 
-#Теперь перезапускаем nginx:
+# Теперь перезапускаем nginx:
 
 sudo /etc/init.d/nginx reload
+
+# Сайт доступен по адресу 127.0.0.1
 ```
 
 ###Сущности:
@@ -162,8 +165,7 @@ sudo /etc/init.d/nginx reload
 
 
 ###Счет пользователя:
-У любого заказчика, исполнителя может быть только по одному счету - поле в расширенном профиле модели пользователя. Профиль содержит поле "Счет":
-DecimalField, NOT NULL, default = 100.
+У любого заказчика, исполнителя может быть только по одному счету - поле в расширенном профиле модели пользователя. Профиль содержит поле "Счет": DecimalField, NOT NULL, default = 100.
 
 ###Две группы пользователей с правами:
 1. **customers** - booking.add_booking (создавать заказ).
@@ -219,7 +221,7 @@ DecimalField, NOT NULL, default = 100.
 Когда заказчик формирует заказ через форму, он указывает стоимость заказа.
 Заказу назначается введенная цена. Затем заказ сохраняется в таблицу-ленту
 заказов, заказу автоматически назначается статуc - “Ожидает выполнения”,
-заказу назначается исполнитель - "NULL". Форма доступна только заказчикам.
+заказу не назначается исполнитель - "NULL". Форма доступна только заказчикам.
 В ней можно заполнить поля для модели заказа.
 
 2. ######Лента заказов.
@@ -244,7 +246,7 @@ DecimalField, NOT NULL, default = 100.
   - "Взять заказ" - "Ожидает выполнения"("pending").
   - "Подтвердить"/"Отклонить" - "Ожидает подтверждения" ("waiting_for_approval")
   - "Завершить заказ" - "Взят на исполнение"("running").
-  - "Удалить заказ" - "Ожидает выполнения", “Завершен”
+  - "Удалить заказ" - "Ожидает выполнения", “Завершен” (для списка своих заказов пользователя.)
   - Заказ не отображается в ленте - “Завершен”("completed").
 
  **Схема отображения кнопок/действий в столбце таблицы:**

@@ -32,7 +32,7 @@ from Booking.views import LoginRequiredMixin
 import json
 
 
-class BookingCreate(LoginRequiredMixin, CreateView):
+class BookingCreate(CreateView):
     """
     Создание заказа
     """
@@ -536,10 +536,6 @@ class DeleteBookingView(LoginRequiredMixin, DeleteView):
 
     model = Booking
 
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(DeleteBookingView, self).dispatch(*args, **kwargs)
-
     def get_success_url(self):
         """
         Редирект на страницу всех заказов или на страницу заказов пользователя
@@ -569,7 +565,7 @@ class DeleteBookingView(LoginRequiredMixin, DeleteView):
         return super(DeleteBookingView, self).delete(request, *args, **kwargs)
 
 
-class UpdateBookingView(LoginRequiredMixin, UpdateView):
+class UpdateBookingView(UpdateView):
     """
     Обновление заказа
     """
@@ -605,10 +601,6 @@ class BookingDetailView(LoginRequiredMixin, DetailView):
         context['comments'] = reversed(self.object.booking_comments.all())
         return context
 
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(BookingDetailView, self).dispatch(*args, **kwargs)
-
     def get_object(self, queryset=None):
         """ Текущий пользователь - создатель или исполнитель заказа """
         booking = super(BookingDetailView, self).get_object()
@@ -626,10 +618,6 @@ class CreateCommentView(LoginRequiredMixin, CreateView):
     model = Comment
     fields = ['text']
     form_class = CommentForm
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(CreateCommentView, self).dispatch(*args, **kwargs)
 
     def get_success_url(self):
         """

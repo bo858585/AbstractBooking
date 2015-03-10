@@ -81,7 +81,6 @@ def user_login(request):
 
 # Create a new class that redirects the user to the index page, if successful at logging
 class BookingRegistrationView(RegistrationView):
-    #form_class = BookingRegistrationForm
 
     def get_success_url(self, request, user):
         return reverse('booking-list')

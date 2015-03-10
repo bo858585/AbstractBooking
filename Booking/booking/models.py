@@ -41,6 +41,7 @@ class Booking(models.Model):
     text = models.TextField(max_length=4000)
     price = models.DecimalField(max_digits=8, decimal_places=2, default=100)
     status = models.CharField(
+        db_index=True,
         choices=STATUS_CHOICES,
         default=PENDING,
         max_length=30
@@ -48,7 +49,7 @@ class Booking(models.Model):
     customer = models.ForeignKey(User, related_name='customer_booking')
     performer = models.ForeignKey(
         User, null=True, blank=True, related_name='performer_booking')
-    date = models.DateTimeField(auto_now_add=True)
+    date = models.DateTimeField(db_index=True, auto_now_add=True)
 
     def set_performer(self, performer):
         """
@@ -170,5 +171,5 @@ class SystemAccount(models.Model):
 class Comment(models.Model):
     booking = models.ForeignKey(Booking, related_name='booking_comments')
     text = models.TextField(max_length=1000)
-    date = models.DateTimeField(auto_now_add=True)
+    date = models.DateTimeField(db_index=True, auto_now_add=True)
     creator = models.ForeignKey(User, related_name='creator_comments')

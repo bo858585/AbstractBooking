@@ -16,7 +16,6 @@ pip install Django==1.7.5
 # Согласно инуструкциям для Trusty 14.04, установить Postgres:
 # (http://www.postgresql.org/download/linux/ubuntu/):
 
-```sh
 deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | \
 sudo apt-key add -

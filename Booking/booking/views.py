@@ -528,13 +528,17 @@ class OwnBookingListView(LoginRequiredMixin, ListView):
         return context
 
 
-class DeleteBookingView(LoginRequiredMixin, DeleteView):
+class DeleteBookingView(DeleteView):
     """
     Удаление заказа.
     Необходимо сделать удаление комментариев заказа.
     """
 
     model = Booking
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(DeleteBookingView, self).dispatch(*args, **kwargs)
 
     def get_success_url(self):
         """
@@ -589,7 +593,7 @@ class UpdateBookingView(UpdateView):
         return booking
 
 
-class BookingDetailView(LoginRequiredMixin, DetailView):
+class BookingDetailView(DetailView):
     """
     Детализированный вид заказа.
     Сюда же включен список комментариев к нему.
@@ -601,6 +605,10 @@ class BookingDetailView(LoginRequiredMixin, DetailView):
         context['comments'] = reversed(self.object.booking_comments.all())
         return context
 
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(BookingDetailView, self).dispatch(*args, **kwargs)
+
     def get_object(self, queryset=None):
         """ Текущий пользователь - создатель или исполнитель заказа """
         booking = super(BookingDetailView, self).get_object()
@@ -610,7 +618,7 @@ class BookingDetailView(LoginRequiredMixin, DetailView):
         return booking
 
 
-class CreateCommentView(LoginRequiredMixin, CreateView):
+class CreateCommentView(CreateView):
     """
     Создание заказа
     """
@@ -618,6 +626,10 @@ class CreateCommentView(LoginRequiredMixin, CreateView):
     model = Comment
     fields = ['text']
     form_class = CommentForm
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(CreateCommentView, self).dispatch(*args, **kwargs)
 
     def get_success_url(self):
         """

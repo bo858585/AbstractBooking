@@ -49,10 +49,12 @@ postgres ALL=(ALL) ALL
 psql -U postgres
 CREATE DATABASE django_db OWNER django_dev ENCODING 'UTF8';
 
-#Врести настройки в /etc/postgresql/9.4/main/pg_hba.conf:
+# Врести настройки в /etc/postgresql/9.4/main/pg_hba.conf:
+# (Настройки приведены без шифрования. При необходимости его можно настроить.)
 local    all    postgres    trust
 local    all    all    md5
 local    django_db    django_dev    md5
+
 
 # В корне проекта лежит пример настройки postgresql.conf.
 # Его необходимо скопировать из корня проекта в /etc/postgresql/9.4/main/postgresql.conf:

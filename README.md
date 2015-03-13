@@ -127,36 +127,27 @@ sudo supervisorctl restart Booking
 
 **Настройка nginx:**
 
+Сгенерировать сертификат:
+(для тестирования подойдет самоподписанный
+http://dracoblue.net/dev/https-nginx-with-self-signed-ssl-certificate/)
+
 ```sh
 apt-get install nginx
+
+sudo -s
+cd /etc/nginx
+openssl req -new -x509 -nodes -out server.crt -keyout server.key
+chmod 600 server.key
+
 cp /etc/nginx/sites-available/default /etc/nginx/sites-available/_default
+
+# Вставить в default файл из корня проекта
 nano /etc/nginx/sites-available/default
 
-# Вставить в default конфигурацию ниже:
-
-server {
-  listen   80;
-  server_name localhost;
-
-  error_log   /var/log/nginx/error.log;
-
-  location /static/  {
-    alias /home/user/work/Booking/AbstractBooking/Booking/static_for_deploy/;
-    expires 30d;
-  }
-
-  location / {
-    root            /home/user/work/Booking/AbstractBooking/Booking/Booking;
-    uwsgi_pass      127.0.0.1:3031;
-    include         uwsgi_params;
-  }
-}
-
 # Теперь перезапускаем nginx:
-
 sudo /etc/init.d/nginx reload
 
-# Сайт доступен по адресу 127.0.0.1
+# Сайт доступен по адресам 127.0.0.1, http://127.0.0.1, https://127.0.0.1
 ```
 
 ###Сущности:

@@ -58,8 +58,6 @@ table#booking_list tr th#delete { width: 8%; }
             <a href="{% url 'update-booking' booking.0.pk %}">
                 Редактирование
             </a>
-        {% else %}
-            {{ booking.0.title }}
         {% endif %}
         {% if booking.0.customer = user or booking.0.performer = user and booking.0.status != "waiting_for_approval" %}
             <a href="{% url 'booking-detail' booking.0.pk %}">

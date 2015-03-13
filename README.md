@@ -30,16 +30,16 @@ sudo -u postgres psql template1
 ALTER USER postgres with encrypted password 'postgres';
 
 #Добавить строчку в pg_hba.conf:
+# (trust выставлен для того, чтобы перезапуск работал)
 sudo nano /etc/postgresql/9.4/main/pg_hba.conf
 local   all             postgres                                trust
+
+# Перезапуск бд
+sudo service postgresql restart
 
 #Создать пользователя бд для django-приложения:
 sudo -u postgres createuser -P django_dev
 Пароль: django_dev_password
-
-# (При необходимости пароль изменить так:)
-sudo -u postgres psql template1
-ALTER USER django_dev with encrypted password 'django_dev_password';
 
 #Добавить postgres-пользователя в sudoers:
 sudo nano /etc/sudoers
@@ -49,17 +49,16 @@ postgres ALL=(ALL) ALL
 psql -U postgres
 CREATE DATABASE django_db OWNER django_dev ENCODING 'UTF8';
 
-# Врести настройки в /etc/postgresql/9.4/main/pg_hba.conf:
-# (Настройки приведены без шифрования. При необходимости его можно настроить.)
-local    all    postgres    trust
-local    all    all    md5
+# Добавить настройки в /etc/postgresql/9.4/main/pg_hba.conf:
+# (Доступ по пароля для пользователя django-приложения)
 local    django_db    django_dev    md5
-
 
 # В корне проекта лежит пример настройки postgresql.conf.
 # Его необходимо скопировать из корня проекта в /etc/postgresql/9.4/main/postgresql.conf:
+cd /etc/postgresql/9.4/main
+cp postgresql.conf _postgresql.conf
 cd proj_dir
-cp ./postgresql.conf ./etc/postgresql/9.4/main
+cp postgresql.conf /etc/postgresql/9.4/main
 
 # Перезапуск бд
 sudo service postgresql restart
@@ -76,6 +75,8 @@ cd Booking
 git clone https://github.com/macropin/django-registration
 cd django-registration
 python setup.py install
+
+cd ../
 
 python manage.py migrate
 python manage.py syncdb

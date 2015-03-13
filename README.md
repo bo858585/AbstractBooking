@@ -8,7 +8,7 @@
 # (https://virtualenvwrapper.readthedocs.org/en/latest/)
 
 pip install virtualenvwrapper
-mkvirtualenv booking_venv
+mkvirtualenv _Booking
 pip install python
 sudo apt-get install libpq-dev python-dev
 pip install Django==1.7.5
@@ -31,15 +31,20 @@ ALTER USER postgres with encrypted password 'postgres';
 
 #Добавить строчку в pg_hba.conf:
 sudo nano /etc/postgresql/9.4/main/pg_hba.conf
-local   all             postgres                                trust
+local   all             postgres                                md5
+
+# Перезапуск бд
+su postgres
+su postgres /etc/init.d/postgresql stop
+su postgres /etc/init.d/postgresql start
+su your_user
+
+(# Также бд можно перезапустить так, но потребуется указать trust в pg_hba.conf:
+sudo service postgresql restart)
 
 #Создать пользователя бд для django-приложения:
 sudo -u postgres createuser -P django_dev
 Пароль: django_dev_password
-
-# (При необходимости пароль изменить так:)
-sudo -u postgres psql template1
-ALTER USER django_dev with encrypted password 'django_dev_password';
 
 #Добавить postgres-пользователя в sudoers:
 sudo nano /etc/sudoers
@@ -49,20 +54,26 @@ postgres ALL=(ALL) ALL
 psql -U postgres
 CREATE DATABASE django_db OWNER django_dev ENCODING 'UTF8';
 
-# Врести настройки в /etc/postgresql/9.4/main/pg_hba.conf:
-# (Настройки приведены без шифрования. При необходимости его можно настроить.)
-local    all    postgres    trust
-local    all    all    md5
+# Добавить настройки в /etc/postgresql/9.4/main/pg_hba.conf:
+# (Доступ по паролю для пользователя django-приложения)
 local    django_db    django_dev    md5
 
-
-# В корне проекта лежит пример настройки postgresql.conf.
+# В корне проекта лежит пример настройки postgresql.conf
 # Его необходимо скопировать из корня проекта в /etc/postgresql/9.4/main/postgresql.conf:
+cd /etc/postgresql/9.4/main
+cp postgresql.conf _postgresql.conf
 cd proj_dir
-cp ./postgresql.conf ./etc/postgresql/9.4/main
+cp postgresql.conf /etc/postgresql/9.4/main
 
 # Перезапуск бд
-sudo service postgresql restart
+su postgres
+su postgres /etc/init.d/postgresql stop
+su postgres /etc/init.d/postgresql start
+su your_user
+
+# Перезапуск бд можено делать и через
+service postgresql restart
+# Но понадобится выставить trust вместо md5 в pg_hba.conf
 
 # При необходимости сгенерировать ssh ключ
 https://help.github.com/articles/generating-ssh-keys/
@@ -76,6 +87,8 @@ cd Booking
 git clone https://github.com/macropin/django-registration
 cd django-registration
 python setup.py install
+
+cd ../
 
 python manage.py migrate
 python manage.py syncdb
@@ -103,7 +116,7 @@ sudo apt-get install uwsgi-plugin-python
 sudo nano /etc/supervisor/conf.d/Booking.conf
 
 [program:Booking]
-command = /home/user/.virtualenvs/booking_venv/bin/uwsgi --socket :3031 --chdir /home/user/work/Booking/AbstractBooking/Booking --env DJANGO_SETTINGS_MODULE=Booking.settings --module "django.core.wsgi:get_wsgi_application()"
+command = /home/user/.virtualenvs/_Booking/bin/uwsgi --socket :3031 --chdir /home/user/work/Booking/AbstractBooking/Booking --env DJANGO_SETTINGS_MODULE=Booking.settings --module "django.core.wsgi:get_wsgi_application()"
 autostart = true
 autorestart = true
 stderr_logfile = /home/user/work/Booking/AbstractBooking/Booking/wsgi_err.log
@@ -175,12 +188,12 @@ sudo /etc/init.d/nginx reload
 
 
 ###Настройка и использование сущностей в админке:
-1. **System accounts** - создать один счет системы, указать текущие денежные средства и комиссию системы.
-2. **Группы** - создать две группы: customers, performers, назначить им права (см. ниже).
+1. **System accounts** - создать один счет системы (обязательно должен присутствовать), указать текущие денежные средства и комиссию системы.
+2. **Группы** - создать две группы (обязательно должны присутствовать): customers, performers, назначить им права (см. ниже).
 3. **Пользователи** - тестовых пользователей после создания групп можно завести в админке (например custuser, perfuser) и внести их в соответствующую группу. Также это можно сделать через форму регистрации, но после создания групп в админке. В этом случае расширенные профили пользователей будут созданы автоматически.
 4. **User profiles**	- при создании тестовых пользователей в админке профили каждого из них также нужно заводить также через админку, при необходимости указать их денежные средства.
 
-**Добавить группам в админке права:**
+**Добавить группам в админке права:**(обязательно должны присутствовать)
 
 1. performers - booking | booking | Ability to perform created booking
 2. customers - booking | booking | Can add booking

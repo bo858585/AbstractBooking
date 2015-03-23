@@ -221,13 +221,13 @@ class BookingViewsTestCase(TestCase):
 
         # Взятие заказа на исполнение
         response = self.client.post(reverse('serve-booking'),
-                                    {'booking': booking.id}, follow=True)
+            {'booking': booking.id}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         # Ждет подтверждения взятия на исполнение
+        self.assertEqual(booking.possible_performers.all()[0], user2)
         booking = Booking.objects.all()[0]
-        self.assertEqual(booking.get_performer(), user2)
         self.assertEqual(booking.get_status(), Booking.WAITING_FOR_APPROVAL)
 
         # Выход
@@ -244,8 +244,10 @@ class BookingViewsTestCase(TestCase):
         user = User.objects.get(username='john')
 
         # Подтверждение исполнителем взятия заказа заказчиком
+        performer_id = booking.possible_performers.all()[0].id
+
         response = self.client.post(reverse('approve-booking'),
-                                    {'booking': booking.id}, follow=True)
+            {'booking': booking.id, 'possible_performer': performer_id}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
@@ -355,7 +357,7 @@ class BookingViewsTestCase(TestCase):
 
         # Ждет подтверждения взятия исполнителем от заказчика (первого)
         booking = Booking.objects.all()[0]
-        self.assertEqual(booking.get_performer(), user2)
+        self.assertEqual(booking.possible_performers.all()[0], user2)
         self.assertEqual(booking.get_status(), Booking.WAITING_FOR_APPROVAL)
 
         # Выход
@@ -371,8 +373,9 @@ class BookingViewsTestCase(TestCase):
 
 
         # Подтверждение заказчиком взятия заказа
+        performer_id = booking.possible_performers.all()[0].id
         response = self.client.post(reverse('approve-booking'),
-                                    {'booking': booking.id}, follow=True)
+            {'booking': booking.id, 'possible_performer': performer_id}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
@@ -380,7 +383,6 @@ class BookingViewsTestCase(TestCase):
         booking = Booking.objects.all()[0]
         self.assertEqual(booking.get_status(), Booking.RUNNING)
         self.assertEqual(user1.profile.cash + booking.price, user1_cash_before)
-
 
         # Выход
         response = self.client.post('/accounts/logout/', follow=True)
@@ -494,7 +496,7 @@ class BookingViewsTestCase(TestCase):
 
         # Ждет подтверждения взятия исполнителем от заказчика (первого)
         booking = Booking.objects.all()[0]
-        self.assertEqual(booking.get_performer(), user2)
+        self.assertEqual(booking.possible_performers.all()[0], user2)
         self.assertEqual(booking.get_status(), Booking.WAITING_FOR_APPROVAL)
 
         # Выход
@@ -734,7 +736,7 @@ class BookingViewsTestCase(TestCase):
 
         # Взят на исполнение
         booking = Booking.objects.all()[0]
-        self.assertEqual(booking.get_performer(), user2)
+        self.assertEqual(booking.possible_performers.all()[0], user2)
         self.assertEqual(booking.get_status(), Booking.WAITING_FOR_APPROVAL)
 
         # Выход
@@ -751,8 +753,9 @@ class BookingViewsTestCase(TestCase):
         user = User.objects.get(username='john')
 
         # Подтверждение взятия заказа
+        performer_id = booking.possible_performers.all()[0].id
         response = self.client.post(reverse('approve-booking'),
-                                    {'booking': booking.id}, follow=True)
+            {'booking': booking.id, 'possible_performer': performer_id}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
@@ -903,7 +906,7 @@ class BookingViewsTestCase(TestCase):
 
         # Ждет подтверждения взятия на исполнение
         booking = Booking.objects.all()[0]
-        self.assertEqual(booking.get_performer(), user2)
+        self.assertEqual(booking.possible_performers.all()[0], user2)
         self.assertEqual(booking.get_status(), Booking.WAITING_FOR_APPROVAL)
 
         # Выход
@@ -999,7 +1002,7 @@ class BookingViewsTestCase(TestCase):
 
         # Ждет подтверждения взятия на исполнение
         booking = Booking.objects.all()[0]
-        self.assertEqual(booking.get_performer(), user2)
+        self.assertEqual(booking.possible_performers.all()[0], user2)
         self.assertEqual(booking.get_status(), Booking.WAITING_FOR_APPROVAL)
 
         # Выход
@@ -1014,10 +1017,11 @@ class BookingViewsTestCase(TestCase):
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
         user = User.objects.get(username='john')
+        performer_id = booking.possible_performers.all()[0].id
 
         # Подтверждение исполнителем взятия заказа заказчиком
         response = self.client.post(reverse('approve-booking'),
-                                    {'booking': booking.id}, follow=True)
+            {'booking': booking.id, 'possible_performer': performer_id}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
@@ -1204,7 +1208,7 @@ class BookingViewsTestCase(TestCase):
 
         # Ждет подтверждения взятия на исполнение
         booking = Booking.objects.all()[0]
-        self.assertEqual(booking.get_performer(), user2)
+        self.assertEqual(booking.possible_performers.all()[0], user2)
         self.assertEqual(booking.get_status(), Booking.WAITING_FOR_APPROVAL)
 
         # Создание комментария (негативный тест)
@@ -1242,8 +1246,10 @@ class BookingViewsTestCase(TestCase):
         self.assertEqual(comment.text, 'test_text3')
 
         # Подтверждение исполнителем взятия заказа заказчиком
+        performer_id = booking.possible_performers.all()[0].id
+
         response = self.client.post(reverse('approve-booking'),
-                                    {'booking': booking.id}, follow=True)
+            {'booking': booking.id, 'possible_performer': performer_id}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'booking/booking_list.html')
 
@@ -1359,6 +1365,170 @@ class BookingViewsTestCase(TestCase):
         self.assertEqual(comment.creator, user2)
         self.assertEqual(comment.booking, booking)
         self.assertEqual(comment.text, 'test_text6')
+
+    def test_create_customer_and_two_performers_create_booking_and_serve(self):
+        """
+        Заказчик создает заказ.
+        Два исполнителя пытаются взять его на выполнение.
+        Заявка второго подтверждается заказчиком.
+        Заказ завершается заказчиком.
+        """
+
+        # Добавление третьего пользователя (заказчик)
+        user3 = User.objects.create_user(
+            'johnthird', 'johndow@test.com', 'thirdpassword'
+        )
+        user3.save()
+        UserProfile.objects.create(user=user3, cash=0.00)
+        content_type = ContentType.objects.get_for_model(Booking)
+        permission = Permission.objects.get(
+            content_type=content_type, codename='perform_perm')
+        user3.user_permissions.add(permission)
+        user3.save()
+
+
+        user1 = User.objects.get(username='john')
+        user1_cash_before = user1.profile.cash
+
+        # Вход
+        response = self.client.post('/accounts/login/',
+            {'username': 'john', 'password': 'johnpassword'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Просмотр списка заказов
+        response = self.client.get(reverse('booking-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Просмотр формы создания заказа
+        response = self.client.get(reverse('create-booking'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_form.html')
+
+        # Создание заказа
+        response = self.client.post(reverse('create-booking'),
+                                    {'title': 'test_title1',
+                                        'text': 'test_text1', 'price': '12.00'},
+                                    follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Проверка того, что заказ в базе после создания
+        self.assertEqual(len(Booking.objects.all()), 1)
+        booking = Booking.objects.all()[0]
+
+        user1 = User.objects.get(username='john')
+
+        self.assertEqual(booking.get_customer(), user1)
+        self.assertEqual(booking.title, 'test_title1')
+        self.assertEqual(booking.text, 'test_text1')
+        self.assertEqual(booking.price, 12.0)
+        self.assertEqual(booking.status, Booking.PENDING)
+
+        # Выход
+        response = self.client.post('/accounts/logout/', follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/logged_out.html')
+
+
+        # Вход из-под первого исполнителя
+        response = self.client.post('/accounts/login/',
+            {'username': 'johndow', 'password': 'dowpassword'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        user2 = User.objects.get(username='johndow')
+
+        # Просмотр списка заказов
+        response = self.client.get(reverse('booking-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Взятие заказа на исполнение
+        response = self.client.post(reverse('serve-booking'),
+            {'booking': booking.id}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Ждет подтверждения взятия на исполнение
+        self.assertEqual(booking.possible_performers.all()[0], user2)
+        booking = Booking.objects.all()[0]
+        self.assertEqual(booking.get_status(), Booking.WAITING_FOR_APPROVAL)
+
+        # Выход
+        response = self.client.post('/accounts/logout/', follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/logged_out.html')
+
+
+        # Вход из-под второго исполнителя
+        response = self.client.post('/accounts/login/',
+            {'username': 'johnthird', 'password': 'thirdpassword'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        user3 = User.objects.get(username='johnthird')
+
+        # Просмотр списка заказов
+        response = self.client.get(reverse('booking-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Взятие заказа на исполнение
+        response = self.client.post(reverse('serve-booking'),
+            {'booking': booking.id}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Ждет подтверждения взятия на исполнение
+        possible_performers = booking.possible_performers.all()
+        self.assertEqual(possible_performers[0], user2)
+        self.assertEqual(possible_performers[1], user3)
+        booking = Booking.objects.all()[0]
+        self.assertEqual(booking.get_status(), Booking.WAITING_FOR_APPROVAL)
+
+        # Выход
+        response = self.client.post('/accounts/logout/', follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/logged_out.html')
+
+        # Вход из-под заказчика
+        response = self.client.post('/accounts/login/',
+            {'username': 'john', 'password': 'johnpassword'}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        user3 = User.objects.get(username='john')
+
+        # Подтверждение исполнителем взятия заказа заказчиком
+        performer_id = booking.possible_performers.all()[1].id
+
+        response = self.client.post(reverse('approve-booking'),
+            {'booking': booking.id, 'possible_performer': performer_id}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Взят на исполнение
+        booking = Booking.objects.all()[0]
+        self.assertEqual(booking.get_status(), Booking.RUNNING)
+        self.assertEqual(len(booking.possible_performers.all()), 0)
+        self.assertEqual(user1.profile.cash + booking.price, user1_cash_before)
+
+        # Закрытие заказа
+        response = self.client.post(reverse('complete-booking'),
+                                    {'booking': booking.id}, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking/booking_list.html')
+
+        # Завершен
+        user3 = User.objects.get(username='johnthird')
+        booking = Booking.objects.all()[0]
+        self.assertEqual(booking.get_status(), Booking.COMPLETED)
+        system_account = SystemAccount.objects.all()[0]
+        comission = system_account.get_comission()
+        self.assertEqual(system_account.account, booking.price * comission)
+        self.assertEqual(user3.profile.cash, booking.price * (1 - comission))
 
 
 class BookingViewsPerformanceTestCase(TestCase):
@@ -1530,7 +1700,7 @@ class BookingViewsPerformanceTestCase(TestCase):
 
             # Ждет подтверждения взятия на исполнение
             booking = Booking.objects.all()[i]
-            self.assertEqual(booking.get_performer(), user2)
+            self.assertEqual(booking.possible_performers.all()[0], user2)
             self.assertEqual(booking.get_status(), Booking.WAITING_FOR_APPROVAL)
 
             # Выход
@@ -1548,8 +1718,10 @@ class BookingViewsPerformanceTestCase(TestCase):
             user = User.objects.get(username="".join(['_test_customer', str(i)]))
 
             # Подтверждение исполнителем взятия заказа заказчиком
+            performer_id = booking.possible_performers.all()[0].id
+
             response = self.client.post(reverse('approve-booking'),
-                                        {'booking': booking.id}, follow=True)
+                {'booking': booking.id, 'possible_performer': performer_id}, follow=True)
             self.assertEqual(response.status_code, 200)
             self.assertTemplateUsed(response, 'booking/booking_list.html')
 

@@ -95,15 +95,15 @@ table#booking_list tr th#delete { width: 8%; }
       <td>{{ booking.0.date|date }}</td>
       <td>
           {% if booking.1 == 'can_take' %}
-              {% include "booking/serve.html" with val=booking.0 %}
+              {% include "booking/serve.html" with booking=booking.0 %}
           {% endif %}
           {% if booking.1 == 'can_view' %}
           {% endif %}
           {% if booking.1 == 'can_complete' %}
-              {% include "booking/complete.html" with val=booking.0 %}
+              {% include "booking/complete.html" with booking=booking.0 %}
           {% endif %}
           {% if booking.1 == 'can_approve' %}
-              {% include "booking/approve.html" with val=booking.0 %}
+              {% include "booking/approve.html" with booking=booking.0 %}
           {% endif %}
       </td>
       {% if user|has_group:"customers" %}

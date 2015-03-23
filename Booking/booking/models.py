@@ -49,6 +49,8 @@ class Booking(models.Model):
     customer = models.ForeignKey(User, related_name='customer_booking')
     performer = models.ForeignKey(
         User, null=True, blank=True, related_name='performer_booking')
+    possible_performers = models.ManyToManyField(User)
+
     date = models.DateTimeField(db_index=True, auto_now_add=True)
 
     def set_performer(self, performer):

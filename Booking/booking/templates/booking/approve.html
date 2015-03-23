@@ -1,13 +1,13 @@
 <form action="{% url 'approve-booking' %}" method="post">{% csrf_token %}
-  <input type="hidden" value="{{val.id}}" name="booking" id="booking_id"/>
+  <div class="form-group col-sm-3">
+    <select name="possible_performer">
+      {% for possible_performer in booking.possible_performers.all %}
+          <option value={{possible_performer.id}}>{{possible_performer.username}}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <input type="hidden" value="{{booking.id}}" name="booking" id="booking_id"/>
   <button type="button submit" class="btn btn-success approve">
     Подтвердить
-  </button>
-</form>
-<br>
-<form action="{% url 'decline-booking' %}" method="post">{% csrf_token %}
-  <input type="hidden" value="{{val.id}}" name="booking" id="booking_id"/>
-  <button type="button submit" class="btn btn-success decline">
-    Отклонить
   </button>
 </form>

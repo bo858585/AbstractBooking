@@ -17,6 +17,8 @@ from django.core.urlresolvers import reverse
 from registration.backends.simple.views import RegistrationView
 from registration.signals import user_registered
 from django.contrib.auth.models import Group
+from django.conf import settings
+
 from booking.models import UserProfile
 
 
@@ -99,11 +101,11 @@ def user_registered_callback(sender, user, request, **kwargs):
         # Назначение пользователю группы
         user.groups.add(customers)
         user.save()
-        UserProfile.objects.create(user=user, cash=1000.00)
+        UserProfile.objects.create(user=user, cash=settings.INITIAL_CASH)
     else:
         performers = Group.objects.get(name="performers")
         user.groups.add(performers)
         user.save()
-        UserProfile.objects.create(user=user, cash=1000.00)
+        UserProfile.objects.create(user=user, cash=settings.INITIAL_CASH)
 
 user_registered.connect(user_registered_callback)

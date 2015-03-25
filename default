@@ -1,0 +1,31 @@
+  server {
+       listen         80;
+       server_name    localhost;
+       return         301 https://$server_name$request_uri;
+  }
+
+  server {
+    listen 443 ssl;
+    server_name localhost;
+    ssl_certificate     /etc/nginx/server.crt;
+    ssl_certificate_key /etc/nginx/server.key;
+
+    ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+
+    root /home/user/work/Booking/AbstractBooking/Booking;
+
+    error_log   /var/log/nginx/error.log;
+
+       location /static/  {
+           alias /home/user/work/Booking/AbstractBooking/Booking/static_for_deploy/;
+           expires 30d;
+       }
+
+       location / {
+            root            /home/user/work/Booking/AbstractBooking/Booking/Booking;
+            uwsgi_pass      127.0.0.1:3031;
+            include         uwsgi_params;
+       }
+
+  }

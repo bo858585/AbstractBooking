@@ -548,6 +548,7 @@ class DeleteBookingView(DeleteView):
 
     def delete(self, request, *args, **kwargs):
         Comment.objects.filter(booking=self.get_object()).delete()
+        self.get_object().possible_performers.clear()
         return super(DeleteBookingView, self).delete(request, *args, **kwargs)
 
 

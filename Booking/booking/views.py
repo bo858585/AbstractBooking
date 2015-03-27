@@ -75,8 +75,10 @@ class BookingListView(LoginRequiredMixin, ListView):
     """
     model = Booking
     paginate_by = 20
-    queryset = Booking.objects.exclude(
-        status__exact=Booking.COMPLETED).order_by('-date')
+    queryset = Booking.objects.select_related(
+            'customer', 'performer').prefetch_related(
+            'possible_performers').order_by('-date').exclude(
+                status__exact=Booking.COMPLETED)
 
     # Заказчик может завершить заказ
     CAN_COMPLETE = "can_complete"
@@ -172,7 +174,10 @@ def serve_booking_view(request):
             try:
                 with transaction.atomic():
                     # Проверка текущего статуса заказа
-                    booking = Booking.objects.get(id=request.POST['id'])
+                    booking = Booking.objects.select_related(
+                        'customer', 'performer').prefetch_related(
+                        'possible_performers').get(id=request.POST['id'])
+
                     booking_status = booking.get_status()
                     if booking_status != Booking.PENDING and \
                         booking_status != Booking.WAITING_FOR_APPROVAL:
@@ -212,7 +217,10 @@ def serve_booking_view(request):
         else:
             try:
                 with transaction.atomic():
-                    booking = Booking.objects.get(id=request.POST['booking'])
+                    booking = Booking.objects.select_related(
+                        'customer', 'performer').prefetch_related(
+                        'possible_performers').get(id=request.POST['booking'])
+
                     booking_status = booking.get_status()
                     if booking_status != Booking.PENDING and \
                         booking_status != Booking.WAITING_FOR_APPROVAL:
@@ -267,7 +275,9 @@ def approve_performer_view(request):
         if request.is_ajax():
             try:
                 with transaction.atomic():
-                    booking = Booking.objects.get(id=request.POST['booking_id'])
+                    booking = Booking.objects.select_related(
+                        'customer', 'performer').prefetch_related(
+                        'possible_performers').get(id=request.POST['booking_id'])
 
                     # Проверка того, что текущий пользователь создавал заказ
                     customer = booking.get_customer()
@@ -310,7 +320,9 @@ def approve_performer_view(request):
         else:
             try:
                 with transaction.atomic():
-                    booking = Booking.objects.get(id=request.POST['booking'])
+                    booking = Booking.objects.select_related(
+                        'customer', 'performer').prefetch_related(
+                        'possible_performers').get(id=request.POST['booking'])
 
                     # Проверка того, что текущий пользователь создавал заказ
                     customer = booking.get_customer()
@@ -378,7 +390,9 @@ def complete_booking_view(request):
         if request.is_ajax():
             try:
                 with transaction.atomic():
-                    booking = Booking.objects.get(id=request.POST['id'])
+                    booking = Booking.objects.select_related(
+                        'customer', 'performer').get(id=request.POST['id'])
+
                     booking_status = booking.get_status()
                     if booking_status != Booking.RUNNING:
                         status_message = u"Неверный статус заказа"
@@ -403,7 +417,9 @@ def complete_booking_view(request):
         else:
             try:
                 with transaction.atomic():
-                    booking = Booking.objects.get(id=request.POST['booking'])
+                    booking = Booking.objects.select_related(
+                        'customer', 'performer').get(id=request.POST['booking'])
+
                     booking_status = booking.get_status()
                     if booking_status != Booking.RUNNING:
                         messages.error(request, u'Неверный статус заказа')
@@ -447,9 +463,11 @@ class OwnBookingListView(LoginRequiredMixin, ListView):
     template_name = 'booking/booking_list.html'
 
     def get_queryset(self):
-        queryset = Booking.objects.filter(
-            Q(customer=self.request.user) | Q(performer=self.request.user)
-        ).order_by('-date')
+        queryset = Booking.objects.select_related(
+            'customer', 'performer').prefetch_related(
+            'possible_performers').order_by('-date').filter(
+                Q(customer=self.request.user) | Q(performer=self.request.user)
+            )
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -517,6 +535,9 @@ class DeleteBookingView(DeleteView):
     """
 
     model = Booking
+    queryset = Booking.objects.select_related(
+            'customer').prefetch_related(
+            'possible_performers')
 
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
@@ -558,6 +579,7 @@ class UpdateBookingView(UpdateView):
     """
 
     model = Booking
+    queryset = Booking.objects.select_related('customer')
     fields = ['title', 'text']
     success_url = reverse_lazy('booking-list')
     template_name_suffix = '_update_form'
@@ -581,6 +603,7 @@ class BookingDetailView(DetailView):
     Детализированный вид заказа со списком комментариев к нему.
     """
     model = Booking
+    queryset = Booking.objects.select_related('customer', 'performer')
 
     def get_context_data(self, **kwargs):
         context = super(BookingDetailView, self).get_context_data(**kwargs)
@@ -629,7 +652,7 @@ class CreateCommentView(CreateView):
         if booking_id == "":
             raise Http404
 
-        booking = Booking.objects.get(id=booking_id)
+        booking = Booking.objects.select_related('customer', 'performer').get(id=booking_id)
 
         # Пользователь должен быть либо исполнителем заказа,
         # либо создателем, но, если он исполнитель и его заявка пока что не
